@@ -54,7 +54,7 @@ namespace FiaoCombinedMod
             }
             IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
 
-            UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
+            //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
         void ChineseInitialize()
         {
@@ -861,18 +861,22 @@ namespace FiaoCombinedMod
                 //foreach (MachineTrackerMyId BNB in BBList)
                 for (int Index = UnityEngine.Random.Range(0, BBList.Count - 1); Index < BBList.Count; ++Index)
                 {
-                    //if (ThreatMultiplier.Count == Index + 1)
-                    //{
-                    //    Debug.Log(BBList[Index].name);
-                    //    return (BBList[Index].gameObject);
-                    //}
-
-                    //if (ThreatMultiplier[Index + 1] <= ThreatMultiplier[Index])
-                    //{
-                    //    ThreatMultiplier.RemoveAt(Index + 1);
-                    //    BBList.RemoveAt(Index + 1);
-                    //    continue;
-                    //}
+                    if (ThreatMultiplier.Count == Index + 1)
+                    {
+                        NotEvenHavingAJoint = !BBList[Index].gameObject.GetComponent<ConfigurableJoint>();
+                        NotEvenHavingAFireTag = !BBList[Index].gameObject.GetComponent<FireTag>();
+                        if (!NotEvenHavingAJoint)
+                        {
+                            BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce = Mathf.Min(BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce, 45000);
+                        }
+                        return (BBList[Index].gameObject);
+                    }
+                    if (ThreatMultiplier[Index + 1] <= ThreatMultiplier[Index])
+                    {
+                        ThreatMultiplier.RemoveAt(Index + 1);
+                        BBList.RemoveAt(Index + 1);
+                        continue;
+                    }
                     //if (new Vector3(Diff.x, Diff.y, 0).sqrMagnitude < OnScreenCloseEnoughDistSqr)
                     //{
                     //    ThreatMultiplier.RemoveAt(Index);

@@ -1,12 +1,10 @@
-﻿using spaar;
+﻿using spaar.ModLoader;
 using System;
-using spaar.ModLoader;
 using System.Collections.Generic;
 using System.Collections;
-using System.IO;
+using System.Linq;
+using System.Text;
 using UnityEngine;
-using TheGuysYouDespise;
-using Blocks;
 
 
 namespace FiaoCombinedMod
@@ -26,7 +24,7 @@ namespace FiaoCombinedMod
 
         private MToggle ReduceCameraShake;
 
-        public MToggle UseLockWindow;
+        //public MToggle UseLockWindow;
 
         private MToggle Pitch, Center, Direction, MapCenter, Height, IceFreezeIndicator, GroundIndicator, OneThousandIndicator, HeightIndicator, MiniMap;
 
@@ -40,7 +38,7 @@ namespace FiaoCombinedMod
         public Camera MiniMapCamera;
         public RenderTexture RTCamera;
 
-        private Texture IndicatorCookie = BlockScript.resources["Indicator.jpg"].texture;
+
         private GameObject BombDrop;
         private LineRenderer AdvBombDrop;
 
@@ -97,6 +95,8 @@ namespace FiaoCombinedMod
 
         delegate void Init();
 
+        MouseOrbit MainMo;
+
         public override void SafeAwake()
         {
             Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInit) : new Init(EnglishInit);
@@ -137,7 +137,7 @@ namespace FiaoCombinedMod
             GroundIndicator = AddToggle("地面指示", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m指示", "1000mIndi", true);
             MiniMap = AddToggle("小地图", "Minimap", false);
-            UseLockWindow = AddToggle("使用锁定窗口", "UseLockWindow", false);
+            //UseLockWindow = AddToggle("使用锁定窗口", "UseLockWindow", false);
 
             ReduceCameraShake = AddToggle("减轻相机抖动", "Noshake", false);
         }
@@ -176,7 +176,7 @@ namespace FiaoCombinedMod
             GroundIndicator = AddToggle("Ground(0m) Indication", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m Indication", "1000mIndi", true);
             MiniMap = AddToggle("Minimap", "Minimap", false);
-            UseLockWindow = AddToggle("Use Locking Window", "UseLockWindow", false);
+            //UseLockWindow = AddToggle("Use Locking Window", "UseLockWindow", false);
 
             ReduceCameraShake = AddToggle("Make Camera No Longer Shake Or Lerp After Focused On A Block", "Noshake", false);
         }
@@ -216,7 +216,7 @@ namespace FiaoCombinedMod
             Center.DisplayInMapper = ConfigMenu.Value == 1;
             MapCenter.DisplayInMapper = ConfigMenu.Value == 1;
             MiniMap.DisplayInMapper = ConfigMenu.Value == 1;
-            UseLockWindow.DisplayInMapper = ConfigMenu.Value == 1;
+            //UseLockWindow.DisplayInMapper = ConfigMenu.Value == 1;
 
             HeightIndicator.DisplayInMapper = ConfigMenu.Value == 1;
             IceFreezeIndicator.DisplayInMapper = ConfigMenu.Value == 1 && HeightIndicator.IsActive;
@@ -239,7 +239,6 @@ namespace FiaoCombinedMod
             BombDropLight.intensity = 8;
             BombDropLight.range = Camera.main.farClipPlane;
             BombDropLight.color = Color.red;
-            BombDropLight.cookie = IndicatorCookie;
             BombDropLight.cookieSize = 100;
             BombDropLight.range = 5;
             BombDrop.transform.LookAt(new Vector3(BombDrop.transform.position.x, BombDrop.transform.position.y - 10, BombDrop.transform.position.z));
@@ -261,18 +260,18 @@ namespace FiaoCombinedMod
 
             机体准星 = Center.IsActive ? resources["HUD/Center.png"].texture : null;
             俯仰刻度 = Pitch.IsActive ? resources["HUD/Gradienter.png"].texture : null;
-            正00纹理 = resources["HUD/Zero Zero Front.png"].texture;
-            负00纹理 = resources["HUD/Zero Zero Back.png"].texture;
-            冰层纹理 = resources["HUD/Ice Floor.png"].texture;
-            地面那一条杠杠滴纹理 = resources["HUD/Floor Line.png"].texture;
-            现时高度指示纹理 = resources["HUD/Height Line.png"].texture;
-            一千杠杠 = resources["HUD/OverICE Line.png"].texture;
-            北罗盘纹理 = resources["HUD/Direction Indicator North.png"].texture;
-            南罗盘纹理 = resources["HUD/Direction Indicator South.png"].texture;
-            西罗盘纹理 = resources["HUD/Direction Indicator East.png"].texture;
-            东罗盘纹理 = resources["HUD/Direction Indicator West.png"].texture;
-            小罗盘纹理 = resources["HUD/Direction Indicator Small.png"].texture;
-            小地图纹理 = resources["HUD/Minimap Addition.png"].texture;
+            正00纹理 = MapCenter.IsActive ? resources["HUD/Zero Zero Front.png"].texture : null;
+            负00纹理 = MapCenter.IsActive ? resources["HUD/Zero Zero Back.png"].texture : null;
+            现时高度指示纹理 = HeightIndicator.IsActive ? resources["HUD/Height Line.png"].texture : null;
+            冰层纹理 = IceFreezeIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/Ice Floor.png"].texture : null;
+            地面那一条杠杠滴纹理 = GroundIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/Floor Line.png"].texture : null;
+            一千杠杠 = OneThousandIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/OverICE Line.png"].texture : null;
+            北罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator North.png"].texture : null;
+            南罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator South.png"].texture : null;
+            西罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator East.png"].texture : null;
+            东罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator West.png"].texture : null;
+            小罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator Small.png"].texture : null;
+            小地图纹理 = MiniMap.IsActive ? resources["HUD/Minimap Addition.png"].texture : null;
 
 
             if (MiniMap.IsActive)
@@ -332,7 +331,11 @@ namespace FiaoCombinedMod
         }
         protected override void OnSimulateUpdate()
         {
-            Camera.main.GetComponent<MouseOrbit>().focusLerpSmooth = ReduceCameraShake.IsActive ? 999999999999999 : 8;
+            if (!MainMo)
+            {
+                MainMo = Camera.main.GetComponent<MouseOrbit>();
+            }
+            MainMo.focusLerpSmooth = ReduceCameraShake.IsActive ? 999999999999999 : 8;
 
             if (MiniMap.IsActive)
                 MiniMapGO.transform.SetParent(Machine.Active().SimulationMachine);
@@ -375,12 +378,13 @@ namespace FiaoCombinedMod
                     4,
                     displacement.z + T_hitground * velocity.z
                     );
-                if (BombDrop.GetComponent<Light>())
+                Light BombLight = BombDrop.GetComponent<Light>();
+                if (BombLight)
                 {
-                    BombDrop.GetComponent<Light>().enabled = true;
-                    BombDrop.GetComponent<Light>().transform.position = bombposition;
-                    BombDrop.GetComponent<Light>().intensity = 8;
-                    BombDrop.GetComponent<Light>().spotAngle = Math.Abs(displacement.y * 3) + 60;
+                    BombLight.enabled = true;
+                    BombLight.transform.position = bombposition;
+                    BombLight.intensity = 8;
+                    BombLight.spotAngle = Math.Abs(displacement.y * 3) + 60;
                     BombDrop.transform.LookAt(new Vector3(bombposition.x, bombposition.y - 10, bombposition.z));
                 }
 

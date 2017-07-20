@@ -109,8 +109,8 @@ namespace FiaoCombinedMod
                     {
                         DCBB.AIDroneList.Add(this);
                         MyControl = DCBB;
-                        break;
                         OrbitVeloMultiplier = 1f;
+                        break;
                     }
                 }
             }

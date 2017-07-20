@@ -505,19 +505,19 @@ namespace FiaoCombinedMod
             return null;
         }
 
-        protected void CheckIfAvailablePilotPanelExists(bool IS)
-        {
-            UseLockingWindow.IsActive = false;
-            if (!IS) return;
-            foreach (PilotPanelScript PPS in Machine.Active().BuildingMachine.GetComponentsInChildren<PilotPanelScript>())
-            {
-                if (PPS.UseLockWindow.IsActive)
-                {
-                    UseLockingWindow.IsActive = true;
-                    return;
-                }
-            }
-        }
+        //protected void CheckIfAvailablePilotPanelExists(bool IS)
+        //{
+        //    UseLockingWindow.IsActive = false;
+        //    if (!IS) return;
+        //    foreach (PilotPanelScript PPS in Machine.Active().BuildingMachine.GetComponentsInChildren<PilotPanelScript>())
+        //    {
+        //        if (PPS.UseLockWindow.IsActive)
+        //        {
+        //            UseLockingWindow.IsActive = true;
+        //            return;
+        //        }
+        //    }
+        //}
 
     }
     public class TrackingComputer : BasicTrackingComputerBehavior
@@ -571,7 +571,7 @@ namespace FiaoCombinedMod
             }
             IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
 
-            UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
+            //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
 
         void ChineseInitialize()
