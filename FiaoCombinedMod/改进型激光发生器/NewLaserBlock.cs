@@ -91,7 +91,7 @@ namespace FiaoCombinedMod
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
             LaserOnOffToggle = AddToggle("默认开启", "laserOnOffToggle", true);
-            LightOptionToggle = AddToggle("保持提供灯光", "LightProbeToggle", true);
+            LightOptionToggle = AddToggle("保持提供灯光", "LightProbeToggle", false);
             LaserOnOffKey = AddKey("发射激光", "laserOnOffKey", KeyCode.Y);
 
             LaserWidth = AddSlider("宽度", "laserWidth", 0.5f, 0.001f, 10f);
@@ -102,7 +102,7 @@ namespace FiaoCombinedMod
             EffectKeyText1 = "聚能特效";
             EffectKeyText2 = "部署炸弹";
 
-            ShrinkEffectToggle = AddToggle("使用粒子/收缩特效", "UseShrink", true);
+            ShrinkEffectToggle = AddToggle("使用粒子/收缩特效", "UseShrink", false);
             InvertShrinking = AddToggle("反转为扩散特效（粒子不变）", "InverseShrink", false);
             ChargeHoldGasp = AddSlider("间隔", "CountDown", 2.3f, 0, 10f);
 
@@ -133,7 +133,7 @@ namespace FiaoCombinedMod
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
             LaserOnOffToggle = AddToggle("Start On", "laserOnOffToggle", true);
-            LightOptionToggle = AddToggle("Always Provide Light", "LightProbeToggle", true);
+            LightOptionToggle = AddToggle("Always Provide Light", "LightProbeToggle", false);
             LaserOnOffKey = AddKey("On/Off", "laserOnOffKey", KeyCode.Y);
 
             LaserWidth = AddSlider("Laser Width", "laserWidth", 0.5f, 0.001f, 10f);
@@ -146,7 +146,7 @@ namespace FiaoCombinedMod
             EffectKeyText2 = "Deploy Bomb";
 
 
-            ShrinkEffectToggle = AddToggle("Use Charging Effect", "UseShrink", true);
+            ShrinkEffectToggle = AddToggle("Use Charging Effect", "UseShrink", false);
             InvertShrinking = AddToggle("Inverse Shrinking to Expanding", "InverseShrink", false);
             ChargeHoldGasp = AddSlider("Charging Countdown", "CountDown", 2.3f, 0, 10f);
 

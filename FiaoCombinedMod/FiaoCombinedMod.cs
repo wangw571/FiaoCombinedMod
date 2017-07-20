@@ -447,9 +447,9 @@ namespace FiaoCombinedMod
                                                 .SetStickyRadius(0.5f),
             });
 
+            OnTrackingLoad();
             LoadBlock(laser);
             LoadBlock(panelBlock);//加载该模块
-            OnTrackingLoad();
             LoadBlock(Drone);
             LoadBlock(ControlBlock);
         }
