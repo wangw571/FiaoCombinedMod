@@ -179,7 +179,7 @@ namespace FiaoCombinedMod
             LaserKineticInOutSlider.DisplayInMapper = LaserEditModeMenu.Value == 0 && LaserAbilityModeMenu.Value == 1;
 
             ShrinkEffectToggle.DisplayInMapper = LaserEditModeMenu.Value == 1;
-            EffectActivateKey.DisplayInMapper = (LaserAbilityModeMenu.Value == 3 ? LaserEditModeMenu.Value == 0 : LaserEditModeMenu.Value == 1 && ShrinkEffectToggle.IsActive);
+            EffectActivateKey.DisplayInMapper = /*(LaserAbilityModeMenu.Value == 3 ? LaserEditModeMenu.Value == 0 : */ShrinkEffectToggle.IsActive/*)*/;
 
             EffectActivateKey.DisplayName = (LaserAbilityModeMenu.Value == 3 ? EffectKeyText2 : EffectKeyText1);
 
@@ -328,8 +328,8 @@ namespace FiaoCombinedMod
         {
             if (LaserAbilityModeMenu != null /*&& !laserAtOff*/)
             {
-                if (EffectActivateKey.IsDown)
-                { 
+                if (EffectActivateKey.IsDown && !laserAtOff)
+                {
                     CountDown = (int)Mathf.Min(CountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     AlreadyCountDown = (int)Mathf.Min(AlreadyCountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     SetLights();
@@ -382,7 +382,7 @@ namespace FiaoCombinedMod
         private void doPassiveAbility()
         {
             if (!BeamHitAnything) return;
-
+            if (ShrinkEffectToggle.IsActive && (CountDown < ChargeHoldGasp.Value * 100)) return;
             foreach (RHInfo rHinfo in rHInfos)
             {
                 RHInfo rH = rHinfo;

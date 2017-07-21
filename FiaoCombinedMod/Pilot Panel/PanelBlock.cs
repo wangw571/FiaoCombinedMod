@@ -29,6 +29,7 @@ namespace FiaoCombinedMod
         private MToggle Pitch, Center, Direction, MapCenter, Height, IceFreezeIndicator, GroundIndicator, OneThousandIndicator, HeightIndicator, MiniMap;
 
         private MMenu ConfigMenu;
+        private MMenu HUDConfigMenu;
 
         public bool HidePanelBool = false;
         public bool HUD_Activated = false;
@@ -126,6 +127,7 @@ namespace FiaoCombinedMod
 
 
             ConfigMenu = AddMenu("ConfigMenu", 0, new List<string> { "飞行信息设置", "HUD设置" });
+            HUDConfigMenu = AddMenu("HUDConfigMenu", 0, new List<string> { "中心", "高度", "俯仰", "罗盘", "地图中心", "小地图" });
             ActiveHUD = AddKey("开启HUD", "HUD", KeyCode.F);
             Height = AddToggle("高度指示", "HeightIndi", true);
             Pitch = AddToggle("俯仰指示", "PitchIndi", true);
