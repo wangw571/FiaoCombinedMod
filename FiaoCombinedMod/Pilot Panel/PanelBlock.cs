@@ -114,7 +114,7 @@ namespace FiaoCombinedMod
                                        "Hide",       //名字
                                        false);             //默认状态
 
-            HidePanel = AddKey("Hide Panel", "Panel", KeyCode.Backspace);
+            //HidePanel = AddKey("Hide Panel", "Panel", KeyCode.Backspace);
 
             AdvTI = AddToggle("高级投弹指示器",   //toggle信息
                                        "AdvTI",       //名字
@@ -127,14 +127,16 @@ namespace FiaoCombinedMod
 
 
             ConfigMenu = AddMenu("ConfigMenu", 0, new List<string> { "飞行信息设置", "HUD设置" });
+
             HUDConfigMenu = AddMenu("HUDConfigMenu", 0, new List<string> { "中心", "高度", "俯仰", "罗盘", "地图中心", "小地图" });
+
             ActiveHUD = AddKey("开启HUD", "HUD", KeyCode.F);
             Height = AddToggle("高度指示", "HeightIndi", true);
             Pitch = AddToggle("俯仰指示", "PitchIndi", true);
             Center = AddToggle("屏幕中心指示", "CenterIndi", true);
             Direction = AddToggle("罗盘", "DirectIndi", true);
             MapCenter = AddToggle("地图中心指示", "MapCenterIndi", true);
-            HeightIndicator = AddToggle("高度指示", "MapCenterIndi", true);
+            HeightIndicator = AddToggle("相机高度指示", "MyHeightIndi", true);
             IceFreezeIndicator = AddToggle("结冰层指示", "IceIndi", true);
             GroundIndicator = AddToggle("地面指示", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m指示", "1000mIndi", true);
@@ -154,7 +156,7 @@ namespace FiaoCombinedMod
                                        "Hide",       //名字
                                        false);             //默认状态
 
-            HidePanel = AddKey("Hide Panel", "Panel", KeyCode.Backspace);
+            //HidePanel = AddKey("Hide Panel", "Panel", KeyCode.Backspace);
 
             AdvTI = AddToggle("ADVANCED \n Target Indicator",   //toggle信息
                                        "AdvTI",       //名字
@@ -167,13 +169,14 @@ namespace FiaoCombinedMod
 
 
             ConfigMenu = AddMenu("ConfigMenu", 0, new List<string> { "Pilot Panel Func", "HUD Func" });
+            HUDConfigMenu = AddMenu("HUDConfigMenu", 0, new List<string> { "Center", "Height", "Pitch", "Direction", "Map Center", "Minimap"/*, "General"*/ });
             ActiveHUD = AddKey("Toggle HUD", "HUD", KeyCode.F);
             Height = AddToggle("Height Indication", "HeightIndi", true);
             Pitch = AddToggle("Pitch Indication", "PitchIndi", true);
             Center = AddToggle("Center Indication", "CenterIndi", true);
             Direction = AddToggle("Direction Indication", "DirectIndi", true);
             MapCenter = AddToggle("Map Center Indication", "MapCenterIndi", true);
-            HeightIndicator = AddToggle("Height Indication", "MapCenterIndi", true);
+            HeightIndicator = AddToggle("Height Indication", "MyHeightIndi", true);
             IceFreezeIndicator = AddToggle("Ice Freeze Indication", "IceIndi", true);
             GroundIndicator = AddToggle("Ground(0m) Indication", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m Indication", "1000mIndi", true);
@@ -206,24 +209,27 @@ namespace FiaoCombinedMod
         {
             ActivateTargetIndicator.DisplayInMapper = ConfigMenu.Value == 0;
             HideThisPanel.DisplayInMapper = ConfigMenu.Value == 0;
-            HidePanel.DisplayInMapper = ConfigMenu.Value == 0;
+            //HidePanel.DisplayInMapper = ConfigMenu.Value == 0; Tracking computer aiming assistor thingy
             AdvTI.DisplayInMapper = ConfigMenu.Value == 0;
             AdvTIS.DisplayInMapper = AdvTI.IsActive && ConfigMenu.Value == 0;
             StartColour.DisplayInMapper = AdvTI.IsActive && ConfigMenu.Value == 0;
             EndColour.DisplayInMapper = AdvTI.IsActive && ConfigMenu.Value == 0;
 
             ActiveHUD.DisplayInMapper = ConfigMenu.Value == 1;
-            Height.DisplayInMapper = ConfigMenu.Value == 1;
-            Pitch.DisplayInMapper = ConfigMenu.Value == 1;
-            Center.DisplayInMapper = ConfigMenu.Value == 1;
-            MapCenter.DisplayInMapper = ConfigMenu.Value == 1;
-            MiniMap.DisplayInMapper = ConfigMenu.Value == 1;
+            HUDConfigMenu.DisplayInMapper = ConfigMenu.Value == 1;
+
+            Height.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 1;
+            Pitch.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 2;
+            Center.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 0;
+            MapCenter.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 4;
+            MiniMap.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 5;
+            Direction.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 3;
             //UseLockWindow.DisplayInMapper = ConfigMenu.Value == 1;
 
-            HeightIndicator.DisplayInMapper = ConfigMenu.Value == 1;
-            IceFreezeIndicator.DisplayInMapper = ConfigMenu.Value == 1 && HeightIndicator.IsActive;
-            GroundIndicator.DisplayInMapper = ConfigMenu.Value == 1 && HeightIndicator.IsActive;
-            OneThousandIndicator.DisplayInMapper = ConfigMenu.Value == 1 && HeightIndicator.IsActive;
+            HeightIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
+            IceFreezeIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
+            GroundIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
+            OneThousandIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
         }
 
         protected override void OnSimulateStart()
@@ -350,10 +356,10 @@ namespace FiaoCombinedMod
             {
                 HUD_Activated = !HUD_Activated;
             }
-            if (HidePanel.IsPressed)
-            {
-                HidePanelBool = !HidePanelBool;
-            }
+            //if (HidePanel.IsPressed)
+            //{
+            //    HidePanelBool = !HidePanelBool;
+            //} Maybe for Tracking
 
             if (HUD_Activated)
             {
