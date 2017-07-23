@@ -18,6 +18,7 @@ namespace FiaoCombinedMod
 
         protected MSlider LaserFocusSlider;
         protected MSlider LaserLengthSlider;
+        protected MSlider LaserSafetyRange;
         //protected MSlider LaserKineticUpDownSlider;
         protected MSlider LaserKineticInOutSlider;
         // protected MSlider LaserKineticSideSlider;
@@ -81,12 +82,13 @@ namespace FiaoCombinedMod
 
             // Setup config window
             LaserEditModeMenu = AddMenu("laserEditMode", 0, new List<string>() { "功能", "通用设置" });
-            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "点燃", "施力", "冰冻", "爆破" });
+            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "点燃", "施力", "冰冻", "爆破", "就好看" });
 
             LaserColourSlider = AddColourSlider("激光颜色", "laserColour", Color.red);
 
             LaserFocusSlider = AddSlider("聚焦乘子", "laserFocus", 1f, 0.08f, 0.5f);
             LaserLengthSlider = AddSlider("长度", "laserLength", 200f, 0.1f, 1500);
+            LaserSafetyRange = AddSlider("安全长度", "laserSafeLength", 1f, 0.1f, 1500);
             LaserKineticInOutSlider = AddSlider("施力力度", "laserKinInOut", 0f, -2.5f, 2.5f);
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
@@ -121,12 +123,14 @@ namespace FiaoCombinedMod
 
             // Setup config window
             LaserEditModeMenu = AddMenu("laserEditMode", 0, new List<string>() { "Ability", "Misc." });
-            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Freeze", "Explosive" });
+            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Freeze", "Explosive", "Just Visual Effect" });
 
             LaserColourSlider = AddColourSlider("Beam Colour", "laserColour", Color.red);
 
             LaserFocusSlider = AddSlider("Laser Focus", "laserFocus", 1f, 0.08f, 0.5f);
             LaserLengthSlider = AddSlider("Laser Length", "laserLength", 200f, 0.1f, 1500);
+            LaserSafetyRange = AddSlider("Safety Length", "laserSafeLength", 1f, 0.1f, 1500);
+
             //LaserKineticUpDownSlider = AddSlider("Up/Down Force", "laserKinUpDown", 1f, -2.5f, 2.5f);
             LaserKineticInOutSlider = AddSlider("In/Out Force", "laserKinInOut", 0f, -2.5f, 2.5f);
             //LaserKineticSideSlider = AddSlider("Sideways Force", "laserKinSide", 0f, -2.5f, 2.5f);
@@ -166,6 +170,7 @@ namespace FiaoCombinedMod
             PenetrativeLengthMultiplier.Value = Mathf.Clamp01(PenetrativeLengthMultiplier.Value);
             LaserFocusSlider.DisplayInMapper = LaserEditModeMenu.Value == 1 && UseLegacy.IsActive;
             LaserLengthSlider.DisplayInMapper = LaserEditModeMenu.Value == 1;
+            LaserSafetyRange.DisplayInMapper = LaserEditModeMenu.Value == 1;
             PenetrativeLengthMultiplier.DisplayInMapper = LaserEditModeMenu.Value == 1;
             LaserWidth.DisplayInMapper = LaserEditModeMenu.Value == 1;
             LaserColourSlider.DisplayInMapper = LaserEditModeMenu.Value == 1;
@@ -447,6 +452,8 @@ namespace FiaoCombinedMod
                         BOMB.GetComponent<ExplodeOnCollideBlock>().Explodey();
                         ReduceBreakForce(rH.Joint);
                         break;
+                    case 4:
+                        return;
                 }
             }
             if (LaserAbilityModeMenu.Value == 3 && (CountDown < ChargeHoldGasp.Value * 100 || !EffectActivateKey.IsDown)) return;
@@ -548,7 +555,7 @@ namespace FiaoCombinedMod
 
             if (!laserAtOff)
             {
-                UpdateFromPoint(this.transform.TransformPoint(0, 0, 1.3f), this.transform.forward);
+                UpdateFromPoint(this.transform.TransformPoint(0, 0, 1.3f + LaserSafetyRange.Value), this.transform.forward);
                 LegacyDrawBeam();
                 LegacySetBeamWidth();
             }
@@ -569,7 +576,7 @@ namespace FiaoCombinedMod
 
             BeamHitAnything = false;
 
-            foreach (RaycastHit Hito in Physics.RaycastAll(lastPoint, lastDir, LaserLength))
+            foreach (RaycastHit Hito in Physics.RaycastAll(lastPoint , lastDir, LaserLength))
             {
                 if (!Hito.collider.isTrigger)
                 {
