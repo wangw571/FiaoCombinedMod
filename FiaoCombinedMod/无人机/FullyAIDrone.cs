@@ -29,9 +29,12 @@ namespace FiaoCombinedMod
         protected MSlider DroneTag;
         GameObject PositionIndicator;
 
+        delegate void Init();
+
         public override void SafeAwake()
         {
-            
+            Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInilization) : new Init(EnglishInilization);
+            init();
         }
         void EnglishInilization()
         {
@@ -77,6 +80,7 @@ namespace FiaoCombinedMod
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["zDroneBump.png"].texture);
 
+
             if (DroneAIType.Value == 0)
             {
                 Activation.DisplayInMapper = false;
@@ -96,6 +100,9 @@ namespace FiaoCombinedMod
 
         protected override void OnSimulateFixedStart()
         {
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["zDroneBump.png"].texture);
+
             if (DroneAIType.Value == 1)
             {
                 IAmSwitching = true;
@@ -508,7 +515,7 @@ namespace FiaoCombinedMod
                 ///AAA
                 MinThings = 38;
 
-                if (!ChasingControl && Vector3.Angle(transform.right, LocalTargetDirection - this.transform.position * 1) > 15 )
+                if (!ChasingControl && Vector3.Angle(transform.right, LocalTargetDirection - this.transform.position * 1) > 15)
                 {
                     OrbitVeloMultiplier = Math.Max(0.1f, OrbitVeloMultiplier - 0.01f);
                 }
