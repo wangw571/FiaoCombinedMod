@@ -331,10 +331,11 @@ namespace FiaoCombinedMod
         }
         protected override void OnSimulateFixedUpdate()
         {
-            if (LaserAbilityModeMenu != null /*&& !laserAtOff*/)
+            if (LaserAbilityModeMenu != null && ShrinkEffectToggle.IsActive /*&& !laserAtOff*/)
             {
                 if (EffectActivateKey.IsDown && !laserAtOff)
                 {
+                    
                     CountDown = (int)Mathf.Min(CountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     AlreadyCountDown = (int)Mathf.Min(AlreadyCountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     SetLights();
