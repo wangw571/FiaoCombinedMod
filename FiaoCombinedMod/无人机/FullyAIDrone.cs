@@ -55,7 +55,7 @@ namespace FiaoCombinedMod
             Activation.DisplayInMapper = false;
             DroneAIType = AddMenu("DroneAIType", 1, new List<string>() { "帮助消灭NPC", "对战测试AI" });
             DroneSize = AddMenu("DroneSizeType", 0, new List<string>() { "重型", "中型", "轻型" });
-            Difficulty = AddMenu("DroneDifficulty", 0, new List<string>() { "较高攻击性", "防御性", "无攻击性 - 设计驯良" });
+            Difficulty = AddMenu("DroneDifficulty", 0, new List<string>() { "较高攻击性", "防御性", "无攻击性 - 射击训练" });
             //Aggressive: To all moving items|Defensive: Only to aggressive blocks|For Practice: Flying around, keeping radar function, 
             //OrbitRadius = AddSlider("Orbit Radius", "OrbitRadius", 15, 5, 200);
             //DroneAmount = AddSlider("Drone Amount", "Amount", 3, 1, 15);

@@ -320,7 +320,7 @@ namespace FiaoCombinedMod
                 laserAtOff = HoldingToEmit.IsActive ? true : !laserAtOff;
             }
 
-            PointLight.enabled = !laserAtOff;
+            PointLight.enabled = !laserAtOff || LightOptionToggle.IsActive;
             CINU(); // better to optimise more expensive stuff instead (eg. trig functions)
 
             if (!laserAtOff)
@@ -335,7 +335,7 @@ namespace FiaoCombinedMod
             {
                 if (EffectActivateKey.IsDown && !laserAtOff)
                 {
-                    
+
                     CountDown = (int)Mathf.Min(CountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     AlreadyCountDown = (int)Mathf.Min(AlreadyCountDown + 1, ChargeHoldGasp.Value * 100 + 1);
                     SetLights();
@@ -536,7 +536,7 @@ namespace FiaoCombinedMod
         public void SetLights()
         {
             if (!PointLight.enabled) return;
-            PointLight.intensity = 3 * Math.Max(0.25f, PenetrativeLengthMultiplier.Value) + 5 * (Mathf.Pow((ShrinkEffectToggle.IsActive ? (InvertShrinking.IsActive ? (1 - (CountDown / (ChargeHoldGasp.Value * 100))) : (CountDown / (ChargeHoldGasp.Value * 100))) : 0), 2) + TheToggleProvideLight);
+            PointLight.intensity = 3 * Math.Max(0.25f, PenetrativeLengthMultiplier.Value + TheToggleProvideLight) + 5 * (Mathf.Pow((ShrinkEffectToggle.IsActive ? (InvertShrinking.IsActive ? (1 - (CountDown / (ChargeHoldGasp.Value * 100))) : (CountDown / (ChargeHoldGasp.Value * 100))) : 0) + TheToggleProvideLight, 2));
             PointLight.range = 3 * Mathf.Max(this.transform.localScale.x, this.transform.localScale.y) * LaserWidth.Value + 5 * Mathf.Pow((ShrinkEffectToggle.IsActive ? (InvertShrinking.IsActive ? 1 - (CountDown / (ChargeHoldGasp.Value * 100)) : (CountDown / (ChargeHoldGasp.Value * 100))) : 0) + TheToggleProvideLight, 2);
         }
         public void CheckIfNeedsUpdate()
@@ -577,7 +577,7 @@ namespace FiaoCombinedMod
 
             BeamHitAnything = false;
 
-            foreach (RaycastHit Hito in Physics.RaycastAll(lastPoint , lastDir, LaserLength))
+            foreach (RaycastHit Hito in Physics.RaycastAll(lastPoint, lastDir, LaserLength))
             {
                 if (!Hito.collider.isTrigger)
                 {
