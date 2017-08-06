@@ -32,7 +32,7 @@ namespace FiaoCombinedMod
 
         protected float 累计质量;
 
-        public static SettingsButton MovieMode;
+        public static SettingsButton LocalMovieMode;
 
         protected delegate void Init();
 
@@ -557,8 +557,8 @@ namespace FiaoCombinedMod
 
         public override void SafeAwake()
         {
-            MovieMode = FiaoCombinedMod.MovieMode;
-            IsInMovieMode = MovieMode.Value;
+            LocalMovieMode = FiaoCombinedMod.MovieMode;
+            /*IsInMovieMode = LocalMovieMode.Value;*/
             Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
             init();
 
@@ -742,7 +742,8 @@ namespace FiaoCombinedMod
         }
         protected override void OnSimulateUpdate()
         {
-            IsInMovieMode = MovieMode.Value;
+            /*IsInMovieMode = LocalMovieMode.Value;*/
+            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
 
             //Trail.GetComponent<TrailRenderer>().material.color = Color.white;
             if (Key1.IsPressed && !HasBurnedOut())

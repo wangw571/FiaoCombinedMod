@@ -45,8 +45,8 @@ namespace FiaoCombinedMod
         public override void SafeAwake()
         {
 
-            MovieMode = FiaoCombinedMod.MovieMode;
-            IsInMovieMode = MovieMode.Value;
+            LocalMovieMode = FiaoCombinedMod.MovieMode;
+            IsInMovieMode = LocalMovieMode.Value;
             Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
             init();
 
@@ -55,7 +55,7 @@ namespace FiaoCombinedMod
                 spaar.ModLoader.Configuration.SetBool("MovieMode", false);
                 spaar.ModLoader.Configuration.Save();
             }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
+            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);IsInMovieMode = LocalMovieMode.Value;
 
             //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
@@ -209,7 +209,7 @@ namespace FiaoCombinedMod
                 spaar.ModLoader.Configuration.SetBool("MovieMode", false);
                 spaar.ModLoader.Configuration.Save();
             }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
+            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);IsInMovieMode = LocalMovieMode.Value;
             自动索敌.DisplayInMapper = 模式.Value == 0;
 
             Key1.DisplayInMapper = 模式.Value != 1 && !自动索敌.IsActive;
@@ -272,7 +272,7 @@ namespace FiaoCombinedMod
 
         protected override void OnSimulateUpdate()
         {
-            IsInMovieMode = MovieMode.Value;
+            IsInMovieMode = LocalMovieMode.Value;
 
             //后坐力
             foreach (Joint Jo in this.GetComponent<BlockBehaviour>().jointsToMe)

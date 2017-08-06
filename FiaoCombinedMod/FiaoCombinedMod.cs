@@ -35,6 +35,7 @@ namespace FiaoCombinedMod
             MovieMode.Value = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
             MovieMode.FontSize = 12;
             MovieMode.Create();
+            MovieMode.OnToggle = OnMovieModeToggle;
             //spaar.ModLoader.SettingsMenu.RegisterSettingsButton("Tracking C.\r\nMovie Mode", GetMovieModeOn, spaar.ModLoader.Configuration.GetBool("MovieMode", false), 12);
 
             if (!spaar.ModLoader.Configuration.DoesKeyExist("LockingTimer"))
@@ -454,6 +455,13 @@ namespace FiaoCombinedMod
             LoadBlock(panelBlock);//加载该模块
             LoadBlock(Drone);
             LoadBlock(ControlBlock);
+        }
+
+        void OnMovieModeToggle(bool a)
+        {
+            spaar.ModLoader.Configuration.SetBool("MovieMode", a);
+            spaar.ModLoader.Configuration.Save();
+
         }
     }
 }
