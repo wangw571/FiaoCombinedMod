@@ -44,6 +44,9 @@ namespace FiaoCombinedMod
 
         public override void SafeAwake()
         {
+
+            MovieMode = FiaoCombinedMod.MovieMode;
+            IsInMovieMode = MovieMode.Value;
             Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
             init();
 
@@ -269,6 +272,8 @@ namespace FiaoCombinedMod
 
         protected override void OnSimulateUpdate()
         {
+            IsInMovieMode = MovieMode.Value;
+
             //后坐力
             foreach (Joint Jo in this.GetComponent<BlockBehaviour>().jointsToMe)
             {

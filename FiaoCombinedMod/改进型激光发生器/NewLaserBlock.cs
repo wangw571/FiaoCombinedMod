@@ -38,6 +38,7 @@ namespace FiaoCombinedMod
         protected MToggle HoldingToEmit;
 
         protected MToggle UseLegacy;
+        protected MToggle UseNotTrans;
 
         protected MSlider LaserWidth;
 
@@ -114,6 +115,8 @@ namespace FiaoCombinedMod
 
             UseLegacy = AddToggle("使用传统渲染", "Legacy", false);
 
+            UseNotTrans = AddToggle("使用不透明材质", "NonTran", false);
+
             // register mode switching functions with menu delegates
             LaserAbilityModeMenu.ValueChanged += CycleAbilityMode;
         }
@@ -159,6 +162,7 @@ namespace FiaoCombinedMod
             HoldingToEmit = AddToggle("Only emit laser when holding", "HoldOnly", false);
 
             UseLegacy = AddToggle("Use Legacy Rending", "Legacy", false);
+            UseNotTrans = AddToggle("Use Non-trans shader", "NonTran", false);
 
             // register mode switching functions with menu delegates
             LaserAbilityModeMenu.ValueChanged += CycleAbilityMode;
@@ -168,7 +172,10 @@ namespace FiaoCombinedMod
         protected override void BuildingUpdate()
         {
             PenetrativeLengthMultiplier.Value = Mathf.Clamp01(PenetrativeLengthMultiplier.Value);
+            UseLegacy.DisplayInMapper = LaserEditModeMenu.Value == 1;
             LaserFocusSlider.DisplayInMapper = LaserEditModeMenu.Value == 1 && UseLegacy.IsActive;
+            UseNotTrans.DisplayInMapper = LaserEditModeMenu.Value == 1 && UseLegacy.IsActive;
+            UseNotTrans.IsActive = UseNotTrans.IsActive && UseLegacy.IsActive;
             LaserLengthSlider.DisplayInMapper = LaserEditModeMenu.Value == 1;
             LaserSafetyRange.DisplayInMapper = LaserEditModeMenu.Value == 1;
             PenetrativeLengthMultiplier.DisplayInMapper = LaserEditModeMenu.Value == 1;
@@ -230,6 +237,8 @@ namespace FiaoCombinedMod
 
         protected override void OnSimulateStart()
         {
+            string ShaderString = UseNotTrans.IsActive ? "Legacy Shaders/Reflective/Bumped Specular" : "Particles/Additive";
+
             rHInfos = new List<RHInfo>();
 
             Especially = new GameObject("TheThings");
@@ -260,7 +269,8 @@ namespace FiaoCombinedMod
                 {
                     lr = this.gameObject.AddComponent<LineRenderer>();
                 }
-                lr.material = new Material(Shader.Find("Particles/Additive"));
+                lr.material = new Material(Shader.Find(ShaderString));
+                lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lr.SetWidth(0.08f, 0.08f);
 
                 Color ArgColour = LaserColourSlider.Value;
@@ -308,7 +318,7 @@ namespace FiaoCombinedMod
 
                 PSR = Especially.GetComponent<ParticleSystemRenderer>();
                 //PSR.material = new Material(Shader.Find("Particles/Alpha Blended"));
-                PSR.material = new Material(Shader.Find("Particles/Additive"));
+                PSR.material = new Material(Shader.Find(ShaderString));
                 PSR.material.mainTexture = (resources["LaserParticle.png"].texture);
             }
         }

@@ -32,6 +32,8 @@ namespace FiaoCombinedMod
 
         protected float 累计质量;
 
+        public static SettingsButton MovieMode;
+
         protected delegate void Init();
 
         public Vector2 formulaProjectile(float X, float Y, float V, float G)
@@ -550,23 +552,19 @@ namespace FiaoCombinedMod
         public bool 但是有两门炮 = false;
         public float 目标前帧速度Mag = 0;
 
-
         public int MissileGuidanceModeInt;
         //public float MaxAcceleration = 0;
 
         public override void SafeAwake()
         {
-            //if (UseChinese)
-            //    ChineseInitialize();
-            //else
-            //    EnglishInitialize();
-
+            MovieMode = FiaoCombinedMod.MovieMode;
+            IsInMovieMode = MovieMode.Value;
             Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
             init();
 
             if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
             {
-                spaar.ModLoader.Configuration.SetBool("MovieMode", false);
+                spaar.ModLoader.Configuration.SetBool("MovieMode", IsInMovieMode);
                 spaar.ModLoader.Configuration.Save();
             }
             IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
@@ -744,6 +742,8 @@ namespace FiaoCombinedMod
         }
         protected override void OnSimulateUpdate()
         {
+            IsInMovieMode = MovieMode.Value;
+
             //Trail.GetComponent<TrailRenderer>().material.color = Color.white;
             if (Key1.IsPressed && !HasBurnedOut())
             {

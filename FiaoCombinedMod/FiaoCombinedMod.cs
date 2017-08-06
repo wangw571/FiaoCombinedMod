@@ -21,6 +21,7 @@ namespace FiaoCombinedMod
         protected Block Drone;
         protected Block TurretBlock;
         protected Block CormacksModifiedTrackingComputer​;
+        public static spaar.ModLoader.SettingsButton MovieMode;
 
         void OnTrackingLoad()
         {
@@ -29,7 +30,7 @@ namespace FiaoCombinedMod
                 Configuration.SetBool("MovieMode", false);
             }
 
-            spaar.ModLoader.SettingsButton MovieMode = new spaar.ModLoader.SettingsButton();
+            MovieMode = new spaar.ModLoader.SettingsButton();
             MovieMode.Text = "Tracking C.\r\nMovie Mode";
             MovieMode.Value = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
             MovieMode.FontSize = 12;
@@ -49,9 +50,10 @@ namespace FiaoCombinedMod
                 }
                 else
                 {
-                    spaar.ModLoader.Configuration.SetBool("MovieMode", spaar.ModLoader.Configuration.GetBool("MovieMode", false));
+                    spaar.ModLoader.Configuration.SetBool("MovieMode", !spaar.ModLoader.Configuration.GetBool("MovieMode", false));
                 }
                 spaar.ModLoader.Configuration.Save();
+                MovieMode.Value = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
                 return "Complete! Now Movie Mode is " + spaar.ModLoader.Configuration.GetBool("MovieMode", false);
 
             }, "Set Tracking Computer for taking movies, thus ignore overload, target lost, cloak, and allow customized locking timer.");
