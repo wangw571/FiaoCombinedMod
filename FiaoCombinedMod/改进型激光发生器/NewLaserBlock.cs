@@ -319,7 +319,7 @@ namespace FiaoCombinedMod
                 PSR = Especially.GetComponent<ParticleSystemRenderer>();
                 //PSR.material = new Material(Shader.Find("Particles/Alpha Blended"));
                 PSR.material = new Material(Shader.Find(ShaderString));
-                PSR.material.mainTexture = (resources["LaserParticle.png"].texture);
+                PSR.material.mainTexture = (resources["FiaoCombinedMod/LaserParticle.png"].texture);
             }
         }
         protected override void OnSimulateUpdate()
@@ -554,7 +554,7 @@ namespace FiaoCombinedMod
             SetBeam();
             if (!laserAtOff)
             {
-                UpdateFromPoint(this.transform.TransformPoint(0, 0, 1.3f), this.transform.forward);
+                UpdateFromPoint(this.transform.TransformPoint(0, 0, 1.3f + LaserSafetyRange.Value), this.transform.forward);
                 CTR.enabled = true;
                 //DrawBeam();
             }

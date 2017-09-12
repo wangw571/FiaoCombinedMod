@@ -23,7 +23,7 @@ namespace FiaoCombinedMod
         public float LockingTimer = -1;
         public bool IsInMovieMode = false;
         protected bool NoSign = false;
-        protected float 转速乘子 = 1f;
+        protected float 转速乘子 = 5;
 
         protected bool NotEvenHavingAFireTag = false;
         protected bool NotEvenHavingAJoint = false;
@@ -264,7 +264,7 @@ namespace FiaoCombinedMod
                            new Rect(
                            new Vector2(Camera.main.WorldToScreenPoint(currentLocking.transform.position).x - SizeMultiplier * size / 2, Screen.height - (Camera.main.WorldToScreenPoint(currentLocking.transform.position).y) - SizeMultiplier * size / 2),
                            new Vector2(SizeMultiplier * size, SizeMultiplier * size))
-                           , resources["Target 0.png"].texture
+                           , resources["FiaoCombinedMod/Target 0.png"].texture
                            );
                 }
             }
@@ -276,7 +276,7 @@ namespace FiaoCombinedMod
                    new Rect(
                    new Vector2(Camera.main.WorldToScreenPoint(currentLocking.transform.position).x - SizeMultiplier * size / 2, Screen.height - (Camera.main.WorldToScreenPoint(currentLocking.transform.position).y) - SizeMultiplier * size / 2),
                    new Vector2(SizeMultiplier * size, SizeMultiplier * size))
-                   , resources["Target 1.png"].texture
+                   , resources["FiaoCombinedMod/Target 1.png"].texture
                    );
                 }
             }
@@ -288,7 +288,7 @@ namespace FiaoCombinedMod
            new Rect(
            new Vector2(Camera.main.WorldToScreenPoint(currentLocking.transform.position).x - SizeMultiplier * size / 2, Screen.height - (Camera.main.WorldToScreenPoint(currentLocking.transform.position).y) - SizeMultiplier * size / 2),
            new Vector2(SizeMultiplier * size, SizeMultiplier * size))
-           , resources["Target 2.png"].texture
+           , resources["FiaoCombinedMod/Target 2.png"].texture
            );
                 }
             }
@@ -301,7 +301,7 @@ namespace FiaoCombinedMod
                      new Vector2(Camera.main.WorldToScreenPoint(currentLocking.transform.position).x - size / 2, Screen.height - (Camera.main.WorldToScreenPoint(currentLocking.transform.position).y) - size / 2),
                      new Vector2(size, size)),
 
-                    resources["Target 3.png"].texture
+                    resources["FiaoCombinedMod/Target 3.png"].texture
                    );
                 }
             }
@@ -314,7 +314,7 @@ namespace FiaoCombinedMod
                             new Vector2(Camera.main.WorldToScreenPoint(currentLocking.transform.position).x - size / 2, Screen.height - (Camera.main.WorldToScreenPoint(currentLocking.transform.position).y) - size / 2),
                             new Vector2(size, size)),
 
-                        resources["Targeted.png"].texture
+                        resources["FiaoCombinedMod/Targeted.png"].texture
                         );
                 }
                 currentTarget = currentLocking;
@@ -335,7 +335,7 @@ namespace FiaoCombinedMod
                                Camera.main.WorldToScreenPoint(new Vector3(Mathf.Cos(elevation) * Mathf.Sin(heading), Mathf.Sin(elevation), Mathf.Cos(elevation) * Mathf.Cos(heading)) * 20).x - 7.5f,
                                Screen.height - (Camera.main.WorldToScreenPoint(new Vector3(Mathf.Cos(elevation) * Mathf.Sin(heading), Mathf.Sin(elevation), Mathf.Cos(elevation) * Mathf.Cos(heading)) * 20).y) - 7.5f),
                            new Vector2(15, 15))
-                           , resources["Target 0.png"].texture
+                           , resources["FiaoCombinedMod/Target 0.png"].texture
                            );
                 }
             }
@@ -507,7 +507,7 @@ namespace FiaoCombinedMod
             return null;
         }
 
-        //protected void CheckIfAvailablePilotPanelExists(bool IS)
+        //protected void CheckIfAvailablePilotPanelExists(bool IS) 
         //{
         //    UseLockingWindow.IsActive = false;
         //    if (!IS) return;
@@ -536,6 +536,15 @@ namespace FiaoCombinedMod
         protected MKey MissileGuidanceModeSwitchButton;
         protected MSlider MissileHeightController;
         protected MSlider MissileTorqueSlider;
+
+        protected MKey 相机抖动;
+        protected MToggle 自动抖动;
+        protected MToggle 惯性;
+        protected MSlider 惯性量;
+        protected MSlider 自动抖动距离;
+        protected MToggle 隐藏;
+        protected MToggle 物理模式;
+        protected MToggle 保持水平;
         //protected MToggle 不聪明模式;
 
         private bool IsOverLoaded = false;
@@ -611,6 +620,19 @@ namespace FiaoCombinedMod
             MissileTorqueSlider = AddSlider("导弹扭矩乘子", "Torque", 4, 0.1f, 10f);
 
             UseLockingWindow = AddToggle("使用自动锁定窗口", "LockWindow", false);
+
+
+
+            相机抖动 = AddKey("抖动相机", "ShakyCam", KeyCode.Q);
+            自动抖动 = AddToggle("自动抖动相机", "AutoShake", false);
+            自动抖动距离 = AddSlider("自动抖动检测距离", "AutoShakeDist", 30, 1, 1500);
+            惯性 = AddToggle("使跟踪具有惯性", "InertiaTracking", false);
+
+            隐藏 = AddToggle("开始模拟后自动隐藏", "AutoHide", true);
+            物理模式 = AddToggle("符合物理的朝向", "Physical", true);
+            惯性量 = AddSlider("惯性乘子", "InertiaMult", 0.2f, 0, 1);
+            保持水平 = AddToggle("保持镜头正立(WIP)", "KeepCamHoriz", false);
+
         }
         void EnglishInitialize()
         {
@@ -651,6 +673,18 @@ namespace FiaoCombinedMod
             MissileTorqueSlider = AddSlider("Torque Multiplier", "Torque", 4, 0.1f, 10f);
 
             UseLockingWindow = AddToggle("Enable Autolock window", "LockWindow", false);
+
+
+            相机抖动 = AddKey("Camera Shake", "ShakyCam", KeyCode.Q);
+            自动抖动 = AddToggle("Automatic Shake Camera", "AutoShake", false);
+            自动抖动距离 = AddSlider("Range of AutoShake", "AutoShakeDist", 30, 1, 1500);
+            惯性 = AddToggle("Inertia for Tracking", "InertiaTracking", false);
+
+            隐藏 = AddToggle("Hide after Simu", "AutoHide", true);
+            物理模式 = AddToggle("Physical Redirecting", "Physical", true);
+            惯性量 = AddSlider("Inertia Multiplier", "InertiaMult", 0.2f, 0, 1);
+            保持水平 = AddToggle("Keep Up Right(WIP)", "KeepCamHoriz", false);
+
         }
         protected virtual IEnumerator UpdateMapper()
         {
@@ -687,13 +721,24 @@ namespace FiaoCombinedMod
             IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);
 
             bool IsMissileMode = 模式.Value == 1;
+            bool IsCamera = 模式.Value == 2;
 
             炮力.DisplayInMapper = !IsMissileMode;
-            计算间隔.DisplayInMapper = 模式.Value != 3;
-            精度.DisplayInMapper = 模式.Value != 3;
+            计算间隔.DisplayInMapper = !IsCamera;
+            精度.DisplayInMapper = !IsCamera;
             MissileGuidanceMode.DisplayInMapper = IsMissileMode;
             MissileGuidanceModeSwitchButton.DisplayInMapper = IsMissileMode;
             MissileTorqueSlider.DisplayInMapper = IsMissileMode;
+
+
+            自动抖动.DisplayInMapper = IsCamera;
+            相机抖动.DisplayInMapper = IsCamera;
+            自动抖动距离.DisplayInMapper = IsCamera && 自动抖动.IsActive;
+            惯性.DisplayInMapper = IsCamera;
+            隐藏.DisplayInMapper = IsCamera;
+            物理模式.DisplayInMapper = IsCamera;
+            惯性量.DisplayInMapper = IsCamera && 惯性.IsActive;
+            保持水平.DisplayInMapper = IsCamera && 物理模式.IsActive;
 
             if (MissileGuidanceMode.Value == 2)
             {
@@ -721,7 +766,7 @@ namespace FiaoCombinedMod
             炮弹速度 = 炮力.Value * 58;
             MissileGuidanceModeInt = MissileGuidanceMode.Value;
             Audio = this.gameObject.AddComponent<AudioSource>();
-            Audio.clip = resources["炮台旋转音效.ogg"].audioClip;
+            Audio.clip = resources["FiaoCombinedMod/炮台旋转音效.ogg"].audioClip;
             Audio.loop = false;
             Audio.volume = 0.2f;
             ConfigurableJoint conf = this.GetComponent<ConfigurableJoint>();
@@ -737,8 +782,10 @@ namespace FiaoCombinedMod
             ModelReplacer();
             MissileColorApplier();
 
-            //this.GetComponent<Rigidbody>().angularDrag = 20;
-            //this.GetComponent<Rigidbody>().maxAngularVelocity = 2f;
+            rigidbody.interpolation = RigidbodyInterpolation.None;
+
+            //rigidbody.angularDrag = 20;
+            //rigidbody.maxAngularVelocity = 2f;
         }
         protected override void OnSimulateUpdate()
         {
@@ -797,7 +844,7 @@ namespace FiaoCombinedMod
                 currentTarget = null;
             }
 
-            if (模式.Value == 2)
+            if (模式.Value == 2 && !物理模式.IsActive)
             {
                 NoSign = true;
                 CameraTrackingComputerMode();
@@ -827,7 +874,7 @@ namespace FiaoCombinedMod
         protected override void OnSimulateFixedUpdate()
         {
             LockingTimer -= Time.deltaTime;
-
+            IsInMovieMode = IsInMovieMode || 模式.Value == 2;
             if (HasBurnedOut() && !StatMaster.GodTools.UnbreakableMode) return;
             if (currentLocking != null)
                 if (!IsInMovieMode)
@@ -900,14 +947,18 @@ namespace FiaoCombinedMod
             {
                 MissileGuidanceComputerMode();
             }
+            else if (物理模式.IsActive)
+            {
+                CameraTrackingComputerMode();
+            }
 
 
         }
         void TurretTrackingComputerMode()
         {
-            float Random = 1 + (0.5f - UnityEngine.Random.value * 0.1f);
+            float Random = 1 + (0.5f - UnityEngine.Random.value) * 0.15f;
             size = 1 * this.transform.localScale.x * this.transform.localScale.y * this.transform.localScale.z;
-            this.GetComponent<Rigidbody>().mass = 2f * size;
+            rigidbody.mass = 2f * size;
             float FireProg = this.GetComponentInChildren<FireController>().fireProgress;
             if (只有一门炮也是没有问题的 && !但是有两门炮)
             {
@@ -926,14 +977,14 @@ namespace FiaoCombinedMod
                         float targetVelo = currentTarget.GetComponent<Rigidbody>().velocity.magnitude;
                         记录器 = 0;
                         LocalTargetDirection = calculateNoneLinearTrajectory(
-                            炮弹速度 + Random,
+                            炮弹速度 * Random,
                             0.2f,
                             this.transform.position,
                             targetVelo,
                             currentTarget.transform.position,
                             currentTarget.GetComponent<Rigidbody>().velocity.normalized,
                                 calculateLinearTrajectory(
-                                    炮弹速度 + Random,
+                                    炮弹速度 * Random,
                                     this.transform.position,
                                     targetVelo,
                                     currentTarget.transform.position,
@@ -954,22 +1005,22 @@ namespace FiaoCombinedMod
             float Difference = Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1);
             //if (Difference > 精度.Value)
             //{
-            //    calculated = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized * TurretRotatingSpeed;
+            //    calculated = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, rigidbody, 0.01f * size) * Mathf.Rad2Deg).normalized * TurretRotatingSpeed;
             //}
             //else
             //{
-            //    calculated = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg);
+            //    calculated = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, rigidbody, 0.01f * size) * Mathf.Rad2Deg);
             //}
             //Vector3 Thera = EulerDifference((MultiplyXAndZ(CorrTorq.normalized, 转速乘子) * TurretRotatingSpeed * (累计质量 / this.rigidbody.mass)), this.Rigidbody.angularVelocity);
             //转速乘子 -= Math.Min(Thera.x, Thera.z) * Mathf.Deg2Rad;
 
             //Debug.Log(Math.Round(转速乘子, 5) + " " + (LocalTargetDirection - this.transform.position).normalized + " " + Math.Min(1 / ((转速乘子 * 100)), 0.005f));
-            转速乘子 *= Mathf.Sign((this.transform.forward - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
-            转速乘子 = Math.Max(1, 转速乘子);
+            float valuees = Mathf.Sign((this.transform.forward - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
+            转速乘子 = Math.Max(Math.Max(转速乘子 * valuees, 5), 转速乘子 / 2);
             CorrTorq = getCorrTorque(
                                 this.transform.forward,
                                 LocalTargetDirection - this.transform.position * 1,
-                                this.GetComponent<Rigidbody>(), 0.01f * size
+                                rigidbody, 0.01f / size
                                 )
                             * Mathf.Rad2Deg;
 
@@ -986,12 +1037,13 @@ namespace FiaoCombinedMod
             if (Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) > 精度.Value)
             {
 
-                Audio.volume = mag * 0.2f * Math.Max((10 / (Vector3.Distance(this.transform.position, GameObject.Find("Main Camera").transform.position))), 1);
+                Audio.maxDistance = 40;
+                Audio.minDistance = 10;
                 Audio.Play();
             }
             else
             {
-                //if (炮力.Value != 0) this.GetComponent<Rigidbody>().freezeRotation = true;
+                //if (炮力.Value != 0) rigidbody.freezeRotation = true;
                 Audio.Stop();
             }
             前一帧速度 = this.rigidbody.velocity;
@@ -999,8 +1051,13 @@ namespace FiaoCombinedMod
         }
         void MissileGuidanceComputerMode()
         {
+            if(1 == 2 - 1)
+            {
+                return;
+            }
+
             size = 1 * this.transform.localScale.x * this.transform.localScale.y * this.transform.localScale.z;
-            this.GetComponent<Rigidbody>().mass = 2f * size;
+            rigidbody.mass = 2f * size;
 
             /*if (this.GetComponent<ConfigurableJoint>())
             {
@@ -1071,24 +1128,95 @@ namespace FiaoCombinedMod
                     //this.transform.rotation = Quaternion.LookRotation(rooo);
                     //LocalTargetDirection = new Vector3(LocalTargetDirection.x, LocalTargetDirection.y - this.transform.position.y, LocalTargetDirection.z);
                     //float mag = (LocalTargetDirection.normalized - transform.forward.normalized).magnitude;
-                    Vector3 TargetDirection = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized;
+                    Vector3 TargetDirection = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, rigidbody, 0.01f * size / MissileTorqueSlider.Value) * Mathf.Rad2Deg).normalized;
                     if ((Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) < 105 && !IsInMovieMode) || MissileGuidanceMode.Value != 0 || MissileGuidanceMode.Value != 1)
                     {
-                        GetComponent<Rigidbody>().angularVelocity = (TargetDirection * RotatingSpeed * MissileTorqueSlider.Value);
+                        //GetComponent<Rigidbody>().angularVelocity = (TargetDirection * RotatingSpeed * MissileTorqueSlider.Value);
                     }
                     else { Debug.Log("Target Lost!"); }
                 }
             }
-            前一帧速度 = this.GetComponent<Rigidbody>().velocity;
+            前一帧速度 = rigidbody.velocity;
         }
+
+
+        public Vector3 CameraTrackingLastPosition = Vector3.zero;
+        public Vector3 CameraInertiaVector = Vector3.zero;
+        public Vector3 LastFrameCorrTorq = Vector3.zero;
         void CameraTrackingComputerMode()
         {
+            NoSign = true;
+            Vector3 Adder = Vector3.zero;
+            Vector3 Zipper = Vector3.zero;
+            rigidbody.isKinematic = false;
+
             if (currentTarget)
             {
-                this.transform.LookAt(currentTarget.transform.position);
+                if (惯性.IsActive)
+                {
+                    Adder += CameraInertiaVector;
+                    CameraInertiaVector = Vector3.Lerp(CameraInertiaVector, currentTarget.transform.position - CameraTrackingLastPosition, 惯性量.Value);
+                    CameraTrackingLastPosition = currentTarget.transform.position + Adder;
+                }
+
+                if (自动抖动.IsActive)
+                {
+                    float Main = Camera.main.farClipPlane;
+                    float value = 自动抖动距离.Value;
+                    float caca = Mathf.Clamp(value * value - Vector3.SqrMagnitude(this.transform.position - currentTarget.transform.position), 0, Main / 2);
+                    Zipper += new Vector3((UnityEngine.Random.value - 0.5f) * caca, (UnityEngine.Random.value - 0.5f) * caca, (UnityEngine.Random.value - 0.5f) * caca);
+                    Vector3 Adderz = new Vector3();
+                    { Adderz = currentTarget.transform.position - this.transform.position; Adderz = new Vector3(Mathf.Sqrt(Math.Abs(Adderz.x)), Mathf.Sqrt(Math.Abs(Adderz.y)), Mathf.Sqrt(Math.Abs(Adderz.z))); }
+                    Adder += new Vector3(Adderz.x * (UnityEngine.Random.value - 0.5f), Adderz.y * (UnityEngine.Random.value - 0.5f), Adderz.z * (UnityEngine.Random.value - 0.5f));
+
+                }
+
+                if (相机抖动.IsDown)
+                {
+                    Vector3 Adderz = new Vector3();
+                    { Adderz = currentTarget.transform.position - this.transform.position; Adderz = new Vector3(Mathf.Sqrt(Math.Abs(Adderz.x)), Mathf.Sqrt(Math.Abs(Adderz.y)), Mathf.Sqrt(Math.Abs(Adderz.z))); }
+                    Adder += new Vector3(Adderz.x * (UnityEngine.Random.value - 0.5f), Adderz.y * (UnityEngine.Random.value - 0.5f), Adderz.z * (UnityEngine.Random.value - 0.5f));
+                    Zipper += new Vector3(Adder.x * (UnityEngine.Random.value - 0.5f), Adder.y * (UnityEngine.Random.value - 0.5f), Adder.z * (UnityEngine.Random.value - 0.5f));
+                    Debug.Log("Shaking!" + Adder);
+                }
+
+
+                if (物理模式.IsActive)
+                {
+                    Vector3 LocalTargetDirection = currentTarget.transform.position + Adder;
+
+                    Vector3 TargetDirection = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, rigidbody, 100) * Mathf.Rad2Deg);
+                    转速乘子 = 10;
+                    CorrTorq = getCorrTorque(
+                                        this.transform.forward,
+                                        -LocalTargetDirection + this.transform.position,
+                                        rigidbody, 0.01f
+                                        )
+                                    * Mathf.Rad2Deg;
+                    CorrTorq = Vector3.Slerp(LastFrameCorrTorq, CorrTorq, (惯性.IsActive ? 惯性量.Value : 1));
+                    this.Rigidbody.angularVelocity = CorrTorq;
+                    LastFrameCorrTorq = CorrTorq;
+
+                    if (保持水平.IsActive)
+                    {
+                        CorrTorq = getCorrTorque(
+                                            this.transform.up,
+                                            Vector3.up,
+                                            rigidbody, 0.02f
+                                            )
+                                        * Mathf.Rad2Deg;
+                        this.Rigidbody.angularVelocity += CorrTorq;
+                    }
+                }
+                else
+                {
+                    this.transform.LookAt(currentTarget.transform.position + Adder);
+                }
+
                 try
                 {
-                    this.GetComponent<Rigidbody>().mass = 0.00001f;
+                    this.rigidbody.mass = 0.1f;
+                    this.rigidbody.useGravity = true;
                 }
                 catch { }
             }
@@ -1096,40 +1224,42 @@ namespace FiaoCombinedMod
         }
 
         Vector3 MissileMode0(Vector3 LocalTargetDirection, float FireProg)
+
+
         {
             if (记录器 >= 1)
             {
-                炮弹速度 = this.GetComponent<Rigidbody>().velocity.magnitude;
+                炮弹速度 = rigidbody.velocity.magnitude;
                 float targetVelo = currentTarget.GetComponent<Rigidbody>().velocity.magnitude;
                 记录器 = 0;
                 //Debug.Log((currentTarget.GetComponent<Rigidbody>().velocity - 前一帧速度).magnitude);
                 LocalTargetDirection = calculateNoneLinearTrajectoryWithAccelerationPrediction(
-                    炮弹速度 + 0.001f,
-                    (this.GetComponent<Rigidbody>().velocity - 前一帧速度).magnitude,
-                    transform.position,
-                    targetVelo,
-                    目标前帧速度Mag - targetVelo,
-                    currentTarget.transform.position,
-                    currentTarget.GetComponent<Rigidbody>().velocity.normalized,
-                        calculateLinearTrajectoryWithAccelerationPrediction(
-                            炮弹速度,
-                            transform.position,
-                            targetVelo,
-                            targetVelo - 目标前帧速度Mag,
-                            currentTarget.transform.position,
-                            currentTarget.GetComponent<Rigidbody>().velocity.normalized,
-                            calculateLinearTrajectory(
+                        炮弹速度 + 0.001f,
+                        (rigidbody.velocity - 前一帧速度).magnitude,
+                        transform.position,
+                        targetVelo,
+                        目标前帧速度Mag - targetVelo,
+                        currentTarget.transform.position,
+                        currentTarget.GetComponent<Rigidbody>().velocity.normalized,
+                            calculateLinearTrajectoryWithAccelerationPrediction(
                                 炮弹速度,
                                 transform.position,
                                 targetVelo,
+                                targetVelo - 目标前帧速度Mag,
                                 currentTarget.transform.position,
-                                currentTarget.GetComponent<Rigidbody>().velocity.normalized),
-                            size * 精度.Value + 10 * size * FireProg
-                        ),
-                        Physics.gravity.y,
-                        size * 精度.Value + 10 * size * FireProg,
-                        float.PositiveInfinity
-                        );
+                                currentTarget.GetComponent<Rigidbody>().velocity.normalized,
+                                calculateLinearTrajectory(
+                                    炮弹速度,
+                                    transform.position,
+                                    targetVelo,
+                                    currentTarget.transform.position,
+                                    currentTarget.GetComponent<Rigidbody>().velocity.normalized),
+                                size * 精度.Value + 10 * size * FireProg
+                            ),
+                            Physics.gravity.y,
+                            size * 精度.Value + 10 * size * FireProg,
+                            float.PositiveInfinity
+                            );
                 目标前帧速度Mag = targetVelo;
             }
             if (LocalTargetDirection.y == float.NaN)
@@ -1142,7 +1272,12 @@ namespace FiaoCombinedMod
 
         void MissileColorApplier()
         {
+            if (模式.Value != 1)
+            {
+                return;
+            }
             Transform Vis = transform.Find("Vis/Vis");
+
             if (MissileGuidanceModeInt == 0)
             {
                 Vis.GetComponent<MeshRenderer>().material.color = Color.white;
@@ -1165,19 +1300,24 @@ namespace FiaoCombinedMod
             Transform Vis = transform.Find("Vis/Vis");
             if (模式.Value == 1)
             {
-                Vis.GetComponentInChildren<MeshFilter>().mesh = resources["MissileModule.obj"].mesh;
+                Vis.GetComponentInChildren<MeshFilter>().mesh = resources["FiaoCombinedMod/MissileModule.obj"].mesh;
                 Vis.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Diffuse"));
                 MissileColorApplier();
                 this.GetComponentInChildren<BoxCollider>().size = new Vector3(0.7f, 0.7f, 1.3f);
                 this.GetComponentInChildren<BoxCollider>().center = new Vector3(0f, 0f, 0.8f);
             }
+            else if (模式.Value == 2 && 隐藏.IsActive && StatMaster.isSimulating)
+            {
+                Vis.transform.localScale = Vector3.zero;
+            }
             else
             {
-                Vis.GetComponentInChildren<MeshFilter>().mesh = resources["turret.obj"].mesh;
+                Vis.GetComponentInChildren<MeshFilter>().mesh = resources["FiaoCombinedMod/turret.obj"].mesh;
                 Vis.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Diffuse"));
                 MissileColorApplier();
                 this.GetComponentInChildren<BoxCollider>().size = new Vector3(1f, 1f, 1.2f);
                 this.GetComponentInChildren<BoxCollider>().center = new Vector3(0f, 0f, 0.6f);
+                Vis.transform.localScale = Vector3.one;
             }
         }
         void OverLoadExplosion()
@@ -1195,5 +1335,6 @@ namespace FiaoCombinedMod
         }
     }
 }
+
 
 

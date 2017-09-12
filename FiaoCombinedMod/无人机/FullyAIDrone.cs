@@ -78,7 +78,7 @@ namespace FiaoCombinedMod
             //Debug.Log(GameObject.Find("frozen_knight_1").GetComponent<Renderer>().material.shader.name);
             //this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Instanced/Block Shader (GPUI off)");
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
-            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["zDroneBump.png"].texture);
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["FiaoCombinedMod/zDroneBump.png"].texture);
 
 
             if (DroneAIType.Value == 0)
@@ -101,7 +101,7 @@ namespace FiaoCombinedMod
         protected override void OnSimulateFixedStart()
         {
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
-            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["zDroneBump.png"].texture);
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["FiaoCombinedMod/zDroneBump.png"].texture);
 
             if (DroneAIType.Value == 1)
             {

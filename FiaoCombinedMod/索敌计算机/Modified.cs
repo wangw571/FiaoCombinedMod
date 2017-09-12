@@ -55,7 +55,7 @@ namespace FiaoCombinedMod
                 spaar.ModLoader.Configuration.SetBool("MovieMode", false);
                 spaar.ModLoader.Configuration.Save();
             }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);IsInMovieMode = LocalMovieMode.Value;
+            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;
 
             //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
@@ -209,7 +209,7 @@ namespace FiaoCombinedMod
                 spaar.ModLoader.Configuration.SetBool("MovieMode", false);
                 spaar.ModLoader.Configuration.Save();
             }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false);IsInMovieMode = LocalMovieMode.Value;
+            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;
             自动索敌.DisplayInMapper = 模式.Value == 0;
 
             Key1.DisplayInMapper = 模式.Value != 1 && !自动索敌.IsActive;
@@ -241,7 +241,7 @@ namespace FiaoCombinedMod
             LockingTimer = -1;
             炮弹速度 = 炮力.Value * 58;
             Audio = this.gameObject.AddComponent<AudioSource>();
-            Audio.clip = resources["炮台旋转音效.ogg"].audioClip;
+            Audio.clip = resources["FiaoCombinedMod/炮台旋转音效.ogg"].audioClip;
             Audio.loop = false;
             Audio.volume = 0.2f;
             ConfigurableJoint conf = this.GetComponent<ConfigurableJoint>();
@@ -472,7 +472,7 @@ namespace FiaoCombinedMod
         }
         void NonMouseMode(float FireProg)
         {
-            float Random = 1 + (0.5f - UnityEngine.Random.value * 0.1f);
+            float Random = 1 + (0.5f - UnityEngine.Random.value) * 0.15f;
             if (currentTarget.transform.position != this.transform.position)
             {
                 Vector3 LocalTargetDirection = currentTarget.transform.position;
@@ -481,14 +481,14 @@ namespace FiaoCombinedMod
                     float targetVelo = currentTarget.GetComponent<Rigidbody>().velocity.magnitude;
                     记录器 = 0;
                     LocalTargetDirection = calculateNoneLinearTrajectory(
-                        炮弹速度 * (1 + Random),
+                        炮弹速度 * Random,
                         0.2f,
                         this.transform.position,
                         targetVelo,
                         currentTarget.transform.position,
                         currentTarget.GetComponent<Rigidbody>().velocity.normalized,
                             calculateLinearTrajectory(
-                                炮弹速度 * (1 + Random),
+                                炮弹速度 * Random,
                                 this.transform.position,
                                 targetVelo,
                                 currentTarget.transform.position,
@@ -524,15 +524,14 @@ namespace FiaoCombinedMod
                 //    this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg);
                 //}
 
-                转速乘子 *= Mathf.Sign((this.transform.right - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
-                转速乘子 = Math.Max(1, 转速乘子);
-
-                Vector3 CorrTorq = getCorrTorque(
-                                this.transform.right,
-                                LocalTargetDirection - this.transform.position * 1,
-                                this.GetComponent<Rigidbody>(), 0.01f * size
-                                )
-                            * Mathf.Rad2Deg;
+                float valuees = Mathf.Sign((this.transform.forward - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
+                转速乘子 = Math.Max(Math.Max(转速乘子 * valuees, 5), 转速乘子 / 2);
+                CorrTorq = getCorrTorque(
+                                    this.transform.forward,
+                                    LocalTargetDirection - this.transform.position * 1,
+                                    rigidbody, 0.01f / size
+                                    )
+                                * Mathf.Rad2Deg;
 
                 this.Rigidbody.angularVelocity = (
                     MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
@@ -542,7 +541,8 @@ namespace FiaoCombinedMod
                 if (Vector3.Angle(transform.right, LocalTargetDirection - this.transform.position * 1) > 0.01f * 精度.Value)
                 {
                     //this.GetComponent<Rigidbody>().freezeRotation = false;
-                    Audio.volume = mag * 0.2f * Math.Max((10 / (Vector3.Distance(this.transform.position, GameObject.Find("Main Camera").transform.position))), 1);
+                    Audio.maxDistance = 40;
+                    Audio.minDistance = 10;
                     Audio.Play();
                 }
                 else

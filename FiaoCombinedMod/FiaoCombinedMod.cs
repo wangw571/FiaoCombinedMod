@@ -12,7 +12,7 @@ namespace FiaoCombinedMod
 {
     public class FiaoCombinedMod : BlockMod
     {
-        public override Version Version { get { return new Version("1.0"); } }
+        public override Version Version { get { return new Version("1.1"); } }
         public override string Name { get { return "FiaoCombinesMod"; } }
         public override string DisplayName { get { return "Fiao's Combined Mods"; } }
         public override string BesiegeVersion { get { return "v0.45a"; } }
@@ -91,7 +91,6 @@ namespace FiaoCombinedMod
 
         public override void OnLoad()
         {
-
             Drone = new Block()
             ///模块ID
             .ID(575)
@@ -100,8 +99,8 @@ namespace FiaoCombinedMod
             .BlockName(Configuration.GetBool("UseChinese", false) ? "无人机" : "Drone I")
 
             ///模型信息
-            .Obj(new List<Obj> { new Obj("zDrone.obj", //Obj
-                                         "zDrone.png", //贴图 
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/zDrone.obj", //Obj
+                                         "FiaoCombinedMod/zDrone.png", //贴图 
                                          new VisualOffset(Vector3.one, //Scale
                                                           Vector3.forward * 3f, //Position
                                                           new Vector3(-90f, 0f, 0f)))//Rotation
@@ -135,7 +134,7 @@ namespace FiaoCombinedMod
 
             ///碰撞器
             .CompoundCollider(new List<ColliderComposite> {
-                ColliderComposite.Mesh("zDroneColl.obj",Vector3.one,Vector3.forward * 3f,Vector3.zero)
+                ColliderComposite.Mesh("FiaoCombinedMod/zDroneColl.obj",Vector3.one,Vector3.forward * 3f,Vector3.zero)
             })
 
             ///你的模块是不是可以忽视强搭
@@ -145,7 +144,7 @@ namespace FiaoCombinedMod
             .NeededResources(new List<NeededResource>
             {
                 //new NeededResource(ResourceType.Mesh,"zDroneColl.obj")
-                                new NeededResource(ResourceType.Texture,"zDroneBump.png")
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/zDroneBump.png")
 
 
             }
@@ -167,8 +166,8 @@ namespace FiaoCombinedMod
             .BlockName(Configuration.GetBool("UseChinese", false) ? "索敌计算机I" : "Tracking Computer I")
 
             ///模型信息
-            .Obj(new List<Obj> { new Obj("turret.obj", //Obj
-                                         "turret.png", //贴图 
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/turret.obj", //Obj
+                                         "FiaoCombinedMod/turret.png", //贴图 
                                          new VisualOffset(new Vector3(1f, 1f, 1f), //Scale
                                                           new Vector3(0f, 0f, 0f), //Position
                                                           new Vector3(-90f, 0f, 0f)))//Rotation
@@ -232,14 +231,14 @@ namespace FiaoCombinedMod
 
             ///载入资源
             .NeededResources(new List<NeededResource> {
-                                new NeededResource(ResourceType.Audio,"炮台旋转音效.ogg"),
-                                new NeededResource(ResourceType.Mesh,"MissileModule.obj"),
-                                new NeededResource(ResourceType.Mesh,"turret.obj"),
-                                new NeededResource(ResourceType.Texture,"Target 0.png"),
-                                new NeededResource(ResourceType.Texture,"Target 1.png"),
-                                new NeededResource(ResourceType.Texture,"Target 2.png"),
-                                new NeededResource(ResourceType.Texture,"Target 3.png"),
-                                new NeededResource(ResourceType.Texture,"Targeted.png")
+                                new NeededResource(ResourceType.Audio,"FiaoCombinedMod/炮台旋转音效.ogg"),
+                                new NeededResource(ResourceType.Mesh,"FiaoCombinedMod/MissileModule.obj"),
+                                new NeededResource(ResourceType.Mesh,"FiaoCombinedMod/turret.obj"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 0.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 1.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 2.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 3.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Targeted.png")
             })
 
             ///连接点
@@ -263,8 +262,8 @@ namespace FiaoCombinedMod
             ///模块名称
             .BlockName(Configuration.GetBool("UseChinese", false) ? "科尔马克氏改良型索敌计算机" : "Cormack\'s Modified Tracking Computer​")
             ///模型信息
-            .Obj(new List<Obj> { new Obj("turret.obj", //Obj
-                                         "Cormack\'s Modified Tracking Computer​.png", //贴图
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/turret.obj", //Obj
+                                         "FiaoCombinedMod/Cormack\'s Modified Tracking Computer​.png", //贴图
                                          new VisualOffset(new Vector3(1f, 1f, 1f), //Scale
                                                           new Vector3(-0.6f, 0f, 0.5f), //Position
                                                           new Vector3(90f, -90f, 0f)))//Rotation
@@ -327,12 +326,12 @@ namespace FiaoCombinedMod
 
             ///载入资源
             .NeededResources(new List<NeededResource> {
-                                new NeededResource(ResourceType.Audio,"炮台旋转音效.ogg"),
-                                new NeededResource(ResourceType.Texture,"Target 0.png"),
-                                new NeededResource(ResourceType.Texture,"Target 1.png"),
-                                new NeededResource(ResourceType.Texture,"Target 2.png"),
-                                new NeededResource(ResourceType.Texture,"Target 3.png"),
-                                new NeededResource(ResourceType.Texture,"Targeted.png")
+                                new NeededResource(ResourceType.Audio,"FiaoCombinedMod/炮台旋转音效.ogg"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 0.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 1.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 2.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Target 3.png"),
+                                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/Targeted.png")
             })
 
             ///连接点
@@ -352,8 +351,8 @@ namespace FiaoCombinedMod
             Block panelBlock = new Block()
             .ID(505)
             .BlockName(Configuration.GetBool("UseChinese", false) ? "仪表盘模块" : "Panel Block")
-            .Obj(new List<Obj> { new Obj("Pilot Panel Block.obj", //Obj
-                                         "Pilot Panel Block.png", //贴图
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/Pilot Panel Block.obj", //Obj
+                                         "FiaoCombinedMod/Pilot Panel Block.png", //贴图
                                          new VisualOffset(new Vector3(1f, 1f, 1f), //Scale
                                                           new Vector3(0f, 0f, 0f), //Position
                                                           new Vector3(0f, 0f, 0f)))//Rotation
@@ -398,7 +397,7 @@ namespace FiaoCombinedMod
             .ID(577)
             .BlockName(!Configuration.GetBool("UseChinese", false) ? "Improved Laser Emitter" : "改进型激光发生器")
             //.BlockName("Improved Laser Emitter" )
-            .Obj(new List<Obj> { new Obj("LaserBlock2.obj", "LaserBlock2.png",
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/LaserBlock2.obj", "FiaoCombinedMod/LaserBlock2.png",
                 new VisualOffset(new Vector3(1f, 1f, 1f), new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f)))
             })
             .IconOffset(new Icon(Vector3.one * 3f, new Vector3(0.2f, -0.3f, -2.15f), new Vector3(30f, 230f, 0f)))
@@ -413,7 +412,7 @@ namespace FiaoCombinedMod
             .IgnoreIntersectionForBase()
             .NeededResources(new List<NeededResource>()
             {
-                new NeededResource(ResourceType.Texture,"LaserParticle.png")
+                new NeededResource(ResourceType.Texture,"FiaoCombinedMod/LaserParticle.png")
             })
             .AddingPoints(new List<AddingPoint> {
                 new BasePoint(false, true).Motionable(false,false,false).SetStickyRadius(0.5f)});
@@ -421,8 +420,8 @@ namespace FiaoCombinedMod
             Block ControlBlock = new Block()
             .ID(576)
             .BlockName(Configuration.GetBool("UseChinese", false) ? "无人机指挥模块" : "Drone Controller Block")
-            .Obj(new List<Obj> { new Obj("DroneController.obj", //Obj
-                                         "DroneController.png", //贴图
+            .Obj(new List<Obj> { new Obj("FiaoCombinedMod/DroneController.obj", //Obj
+                                         "FiaoCombinedMod/DroneController.png", //贴图
                                          new VisualOffset(new Vector3(1f, 1f, 1f), //Scale
                                                           new Vector3(0f, 0f, 0f), //Position
                                                           new Vector3(0f, 0f, 0f)))//Rotation
