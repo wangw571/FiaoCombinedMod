@@ -12,7 +12,7 @@ namespace FiaoCombinedMod
 {
     public class FiaoCombinedMod : BlockMod
     {
-        public override Version Version { get { return new Version("1.1"); } }
+        public override Version Version { get { return new Version("1.1 Modified"); } }
         public override string Name { get { return "FiaoCombinesMod"; } }
         public override string DisplayName { get { return "Fiao's Combined Mods"; } }
         public override string BesiegeVersion { get { return "v0.45a"; } }
@@ -160,10 +160,10 @@ namespace FiaoCombinedMod
 
             TurretBlock = new Block()
             ///模块ID
-            .ID(525)
+            .ID(545)
 
             ///模块名称
-            .BlockName(Configuration.GetBool("UseChinese", false) ? "索敌计算机I" : "Tracking Computer I")
+            .BlockName(Configuration.GetBool("UseChinese", false) ? "索敌计算机I" : "New Tracking Computer I")
 
             ///模型信息
             .Obj(new List<Obj> { new Obj("FiaoCombinedMod/turret.obj", //Obj
@@ -257,10 +257,10 @@ namespace FiaoCombinedMod
 
             CormacksModifiedTrackingComputer​ = new Block()
             ///模块ID
-            .ID(526)
+            .ID(546)
 
             ///模块名称
-            .BlockName(Configuration.GetBool("UseChinese", false) ? "科尔马克氏改良型索敌计算机" : "Cormack\'s Modified Tracking Computer​")
+            .BlockName(Configuration.GetBool("UseChinese", false) ? "科尔马克氏改良型索敌计算机" : "New Cormack\'s Modified Tracking Computer​")
             ///模型信息
             .Obj(new List<Obj> { new Obj("FiaoCombinedMod/turret.obj", //Obj
                                          "FiaoCombinedMod/Cormack\'s Modified Tracking Computer​.png", //贴图
@@ -451,7 +451,7 @@ namespace FiaoCombinedMod
 
             OnTrackingLoad();
             LoadBlock(laser);
-            LoadBlock(panelBlock);//加载该模块
+            //LoadBlock(panelBlock);//加载该模块
             LoadBlock(Drone);
             LoadBlock(ControlBlock);
         }
