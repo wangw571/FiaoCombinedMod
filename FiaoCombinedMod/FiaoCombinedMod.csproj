@@ -32,23 +32,15 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Program Files\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Program Files\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-UnityScript, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Program Files\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-UnityScript.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-UnityScript-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Program Files\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-UnityScript-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="SpaarModLoader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Program Files\Steam\steamapps\common\Besiege\Besiege_Data\Mods\SpaarModLoader.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Besiege\Besiege_Data\Managed\Assembly-UnityScript.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,10 +50,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(BESIEGE_LOCATION)Besiege_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Besiege\Besiege_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="FiaoCombinedMod" />
     <Compile Include="FiaoCombinedMod.cs" />
     <Compile Include="Pilot Panel\PanelBlock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -72,14 +65,14 @@
     <Compile Include="无人机\IncomingDetectionScript.cs" />
     <Compile Include="无人机\SetUp.cs" />
     <Compile Include="无人机\TimedSelfDestruct.cs" />
-    <Compile Include="索敌计算机\Mod.cs" />
+    <Compile Include="索敌计算机\Tracking.cs" />
     <Compile Include="索敌计算机\Modified.cs" />
     <Compile Include="索敌计算机\TargetPainter.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "%25BESIEGE_LOCATION%25Besiege_Data\Mods\$(TargetName).dll"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "%25BESIEGE_LOCATION%25Besiege_Data\Mods\FiaoCombinedMod\FiaoCombinedMod\$(TargetName).dll"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <StartAction>Program</StartAction>

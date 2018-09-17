@@ -1,9 +1,6 @@
 ﻿using System;
-using spaar.ModLoader;
 using UnityEngine;
 using System.Collections.Generic;
-using TheGuysYouDespise;
-using System.Collections;
 namespace FiaoCombinedMod
 {
 
@@ -43,7 +40,7 @@ namespace FiaoCombinedMod
     /// Orbiting Target should be perpendicular to the target's velocity if it's moving. 
     /// </summary>
 
-    public class DroneControlBlockBehavior : BlockScript
+    public class DroneControlBlockBehavior : Modding.BlockScript
     {
         private RaycastHit hitt;
 
@@ -83,16 +80,7 @@ namespace FiaoCombinedMod
 
             AIDroneList = new List<FullyAIDrone>();
         }
-        public override void OnSave(XDataHolder data)
-        {
-            SaveMapperValues(data);
-        }
-        public override void OnLoad(XDataHolder data)
-        {
-            LoadMapperValues(data);
-            if (data.WasSimulationStarted) return;
-        }
-        protected override void BuildingUpdate()
+        public override void BuildingUpdate()
         {
             DroneTag.Value = (int)DroneTag.Value;
             /*if (DroneAIType.Value == 0)
@@ -108,11 +96,7 @@ namespace FiaoCombinedMod
                 OrbitRadius.DisplayInMapper = false;
             }*/
         }
-        protected override void OnSimulateFixedStart()
-        {
-            
-        }
-        protected override void OnSimulateUpdate()
+        public override void SimulateUpdateAlways()
         {
             //Debug.Log(AIDroneList.Count);
             if (Engage.IsPressed)
@@ -125,9 +109,9 @@ namespace FiaoCombinedMod
                         if (hit.transform.position != this.transform.position && hit.collider.attachedRigidbody != null && !hit.collider.isTrigger)
                         {
                             Target = hit.transform.gameObject;
-                            if (Target.GetComponentInParent<MachineTrackerMyId>() || this.name.Contains(("IsCloaked")))
+                            if (Target.GetComponentInParent<MyBlockInfo>() || this.name.Contains(("IsCloaked")))
                             {
-                                if (Target.GetComponentInParent<MachineTrackerMyId>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
+                                if (Target.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
                                 {
                                     Target = null;
                                     continue;
@@ -149,9 +133,9 @@ namespace FiaoCombinedMod
                 //    if (hitt.transform.position != this.transform.position && hitt.collider.attachedRigidbody != null)
                 //    {
                 //        Target = hitt.transform.gameObject;
-                //        if (Target.GetComponentInParent<MachineTrackerMyId>() || this.name.Contains(("IsCloaked")))
+                //        if (Target.GetComponentInParent<MyBlockInfo>() || this.name.Contains(("IsCloaked")))
                 //        {
-                //            if (Target.GetComponentInParent<MachineTrackerMyId>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
+                //            if (Target.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
                 //            {
                 //                Target = null;
                 //            }
@@ -169,9 +153,9 @@ namespace FiaoCombinedMod
                         if (hit.transform.position != this.transform.position && hit.collider.attachedRigidbody != null && !hit.collider.isTrigger)
                         {
                             Target = hit.transform.gameObject;
-                            if (Target.GetComponentInParent<MachineTrackerMyId>() || this.name.Contains(("IsCloaked")))
+                            if (Target.GetComponentInParent<MyBlockInfo>() || this.name.Contains(("IsCloaked")))
                             {
-                                if (Target.GetComponentInParent<MachineTrackerMyId>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
+                                if (Target.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
                                 {
                                     Target = null;
                                     continue;
@@ -203,7 +187,7 @@ namespace FiaoCombinedMod
             }
         }
 
-        protected override void OnSimulateFixedUpdate()
+        public override void SimulateFixedUpdateAlways()
         {
             //FAD.targetPoint = RelativeLeavePositions[AIDroneList.IndexOf(FAD)];
             if (!Engaging)

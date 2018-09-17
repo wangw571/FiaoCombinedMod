@@ -1,8 +1,11 @@
 ﻿using System;
+using Modding;
+using Modding.Blocks;
+using Modding.Common;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using spaar.ModLoader;
 
 namespace FiaoCombinedMod
 {
@@ -33,29 +36,30 @@ namespace FiaoCombinedMod
 
         private AudioSource Audio;
 
-        public float 炮弹速度;
         public int FUCounter;
         private float size;
         private float RotatingSpeed = 0.5f;
         public float 记录器 = 0;
 
         public Vector3 前一帧速度 = Vector3.zero;
-        private bool IsOverLoaded = false;
+        private bool shoott = false;
+
+        public Vector3 AimPos { get; private set; }
 
         public override void SafeAwake()
         {
 
-            LocalMovieMode = FiaoCombinedMod.MovieMode;
-            IsInMovieMode = LocalMovieMode.Value;
-            Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
+            //LocalMovieMode = FiaoCombinedMod.MovieMode;
+            IsInMovieMode = /*LocalMovieMode.Value;*/ false;
+            Init init = /*Configuration.GetBool("UseChinese", false)*/ false ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
             init();
 
-            if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
-            {
-                spaar.ModLoader.Configuration.SetBool("MovieMode", false);
-                spaar.ModLoader.Configuration.Save();
-            }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;
+            //if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
+            //{
+            //    spaar.ModLoader.Configuration.SetBool("MovieMode", false);
+            //    spaar.ModLoader.Configuration.Save();
+            //}
+            //IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;
 
             //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
@@ -126,11 +130,11 @@ namespace FiaoCombinedMod
                                  "Locked",           //名字
                                  KeyCode.T);       //默认按键
 
-            Key2 = AddKey("Release Lock", //按键信息2
+            Key2 = AddKey("Release Lo   ck", //按键信息2
                                  "RLocked",           //名字
                                  KeyCode.Slash);       //默认按键
 
-            Key2 = AddKey("Next Target", //按键信息2
+            Key25 = AddKey("Next Target", //按键信息2
                                 "NTar",           //名字
                                 KeyCode.Slash);       //默认按键
 
@@ -161,8 +165,10 @@ namespace FiaoCombinedMod
             镜头哪里 = AddSlider("Distance From Camera", "Dist", 1500, 1, 900000);
 
             自动索敌 = AddToggle("Auto Lock", "USE", false);
+            自动索敌.DisplayInMapper = false;
             自动索敌友方范围 = AddSlider("Friendly Blocks", "FriendDist", 10, 0, 500);
             模式 = AddMenu("Menu", 0, new List<string> { "Lock Mode", "Mouse Mode" });
+            //模式 = AddMenu("Menu", 0, new List<string> { "Lock Mode"});
 
             不聪明模式 = AddToggle("Disable Calculation",   //toggle信息
                                        "NoCL",       //名字
@@ -173,43 +179,24 @@ namespace FiaoCombinedMod
             //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
             DisableVTracking = AddToggle("Disable Vertical Tracking", "DVT", false);
 
-            KnockBackBonusAdjuster = AddSlider("Knockback/Overload Adjust", "ADJ", 95, 0, 95);
+            KnockBackBonusAdjuster = AddSlider("Knockback/Rotate Adjuster", "ADJ", 95, 0, 95);
 
             LockConnectionWhenNoTarget = AddToggle("Lock the connection\nwhen having no target", "LOCKConnection", false);
 
-            UseLockingWindow = AddToggle("Enable Autolock window", "LockWindow", false);
+            //UseLockingWindow = AddToggle("Enable Autolock window", "LockWindow", false);
         }
 
-        protected virtual IEnumerator UpdateMapper()
+        public override void BuildingUpdate()
         {
-            if (BlockMapper.CurrentInstance == null)
-                yield break;
-            while (Input.GetMouseButton(0))
-                yield return null;
-            BlockMapper.CurrentInstance.Copy();
-            BlockMapper.CurrentInstance.Paste();
-            yield break;
-        }
+            if (LockConnectionWhenNoTarget == null) return;
+            //UseLockingWindow.DisplayInMapper = Machine.BuildingMachine.GetComponentInChildren<PilotPanelScript>() && 模式.Value != 1;
 
-        public override void OnSave(XDataHolder data)
-        {
-            SaveMapperValues(data);
-        }
-        public override void OnLoad(XDataHolder data)
-        {
-            LoadMapperValues(data);
-            if (data.WasSimulationStarted) return;
-        }
-        protected override void BuildingUpdate()
-        {
-            UseLockingWindow.DisplayInMapper = Machine.Active().BuildingMachine.GetComponentInChildren<PilotPanelScript>() && 模式.Value != 1;
-
-            if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
-            {
-                spaar.ModLoader.Configuration.SetBool("MovieMode", false);
-                spaar.ModLoader.Configuration.Save();
-            }
-            IsInMovieMode = spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;
+            //if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
+            //{
+            //    spaar.ModLoader.Configuration.SetBool("MovieMode", false);
+            //    spaar.ModLoader.Configuration.Save();
+            //}
+            IsInMovieMode = /*spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;*/false;
             自动索敌.DisplayInMapper = 模式.Value == 0;
 
             Key1.DisplayInMapper = 模式.Value != 1 && !自动索敌.IsActive;
@@ -220,7 +207,6 @@ namespace FiaoCombinedMod
             {
                 自动索敌.IsActive = false;
             }
-
             KnockBackBonusAdjuster.Value = Mathf.Clamp(KnockBackBonusAdjuster.Value, 0, 95);
 
             警戒度.DisplayInMapper = 自动索敌.IsActive && 模式.Value == 0;
@@ -233,25 +219,20 @@ namespace FiaoCombinedMod
             炮力.DisplayInMapper = !(不聪明模式.IsActive && 模式.Value == 1);
 
             FireOnMouseClick.DisplayInMapper = 模式.Value == 1;
+
+            //自动索敌.DisplayInMapper = false;
         }
-        protected override void OnSimulateStart()
+        public override void OnSimulateStart()
         {
             currentTarget = null;
             currentLocking = null;
             LockingTimer = -1;
-            炮弹速度 = 炮力.Value * 58;
-            Audio = this.gameObject.AddComponent<AudioSource>();
-            Audio.clip = resources["FiaoCombinedMod/炮台旋转音效.ogg"].audioClip;
-            Audio.loop = false;
-            Audio.volume = 0.2f;
-            ConfigurableJoint conf = this.GetComponent<ConfigurableJoint>();
-            conf.breakForce = Mathf.Infinity;
-            conf.breakTorque = Mathf.Infinity;
-            conf.angularZMotion = ConfigurableJointMotion.Locked;
-
-            //this.GetComponent<Rigidbody>().angularDrag = 20;
-            //this.GetComponent<Rigidbody>().maxAngularVelocity = 2f;
+            炮弹速度 = 炮力.Value * 54;
+            SetUpAudioAndVis();
+            if (!StatMaster.isClient) ConfigJointSetup();
+            //conf.angularZMotion = ConfigurableJointMotion.Locked;
         }
+
         //protected override void OnSimulateFixedStart()
         //{
         //    if (自动索敌.IsActive && 自动索敌.DisplayInMapper)
@@ -259,7 +240,7 @@ namespace FiaoCombinedMod
         //        FUCounter = 1;
         //        FriendlyBlockGUID = new List<Guid>();
         //        float range = 自动索敌友方范围.Value * 自动索敌友方范围.Value;
-        //        foreach (Transform FriendlyOr in Machine.Active().SimulationMachine)
+        //        foreach (Transform FriendlyOr in Machine.SimulationMachine)
         //        {
         //            if (range >= this.transform.InverseTransformPoint(FriendlyOr.transform.position).sqrMagnitude)
         //            {
@@ -270,26 +251,82 @@ namespace FiaoCombinedMod
         //    }
         //}
 
-        protected override void OnSimulateUpdate()
-        {
-            IsInMovieMode = LocalMovieMode.Value;
 
-            //后坐力
-            foreach (Joint Jo in this.GetComponent<BlockBehaviour>().jointsToMe)
+        public override void SimulateUpdateClient()
+        {
+            //下个目标
+            if (Machine.Player != Player.GetLocalPlayer()) return;
+            if (Key25.IsPressed && 自动索敌.IsActive)
             {
-                if (Jo.GetComponentInParent<CanonBlock>())
-                {
-                    CanonBlock cb = Jo.GetComponentInParent<CanonBlock>();
-                    if (!IsOverLoaded)
-                    {
-                        cb.knockbackSpeed = 8000 * ((100 - KnockBackBonusAdjuster.Value) / 100);
-                        cb.randomDelay = 0.000001f;
-                    }
-                    else { cb.knockbackSpeed = 8000; }
-                    if (FireOnMouseClick.IsActive && 模式.Value == 1 && Input.GetMouseButtonDown(0)) { cb.Shoot(); }
-                }
+                LockingTimer = currentLocking ? 0 : -1;
             }
 
+            //烧坏
+            if (HasBurnedOut && !StatMaster.GodTools.UnbreakableMode)
+            {
+                currentLocking = null; LockingTimer = -1;
+                currentTarget = null;
+                return;
+            }
+
+            if (自动索敌.IsActive)
+            {
+                return;
+            }
+
+            //鼠标瞄准模式
+            if (模式.Value == 1)
+            {
+                Ray raay = Camera.main.ScreenPointToRay(Input.mousePosition);
+                Message lockmessage = Messages.TrackingComputerLock.CreateMessage(Block.From(this), raay.origin, raay.direction);
+                ModNetworking.SendToHost(lockmessage);
+                if (FireOnMouseClick.IsActive && 模式.Value == 1 && Input.GetMouseButtonDown(0))
+                {
+                    Message shotmess = Messages.ModTrackingComputerShot.CreateMessage(Block.From(this));
+                    ModNetworking.SendToHost(shotmess);
+                }
+            }
+            //按键瞄准模式
+            if (Key1.IsPressed && !HasBurnedOut && 模式.Value == 0)
+            {
+                Ray raay = Camera.main.ScreenPointToRay(Input.mousePosition);
+                Message lockmessage = Messages.TrackingComputerLock.CreateMessage(Block.From(this), raay.origin, raay.direction);
+                ModNetworking.SendToHost(lockmessage);
+            }
+
+            //按键瞄准模式-取消
+            if (Key2.IsPressed && 模式.Value == 0)
+            {
+                currentLocking = null; LockingTimer = -1;
+                currentTarget = null;
+            }
+        }
+
+        public override void SimulateUpdateAlways()
+        {
+            IsInMovieMode =/* LocalMovieMode.Value;*/ false;
+            if (IsOverLoaded || StatMaster.isClient) return;
+
+            //var conf = this.GetComponent<ConfigurableJoint>();
+            //if (Input.GetKey(KeyCode.Z))
+            //{
+            //    conf.angularXDrive = new JointDrive();
+            //    conf.angularXMotion = ConfigurableJointMotion.Locked;
+            //    conf.angularYMotion = ConfigurableJointMotion.Free;
+            //    conf.angularZMotion = ConfigurableJointMotion.Free;
+            //}
+            //else if (Input.GetKey(KeyCode.X))
+            //{
+            //    conf.angularXMotion = ConfigurableJointMotion.Free;
+            //    conf.angularYMotion = ConfigurableJointMotion.Locked;
+            //    conf.angularZMotion = ConfigurableJointMotion.Free;
+            //}
+            //else if (Input.GetKey(KeyCode.C))
+            //{
+            //    conf.angularXMotion = ConfigurableJointMotion.Free;
+            //    conf.angularYMotion = ConfigurableJointMotion.Free;
+            //    conf.angularZMotion = ConfigurableJointMotion.Locked;
+            //}
             //下个目标
             if (Key25.IsPressed && 自动索敌.IsActive)
             {
@@ -298,7 +335,7 @@ namespace FiaoCombinedMod
             }
 
             //烧坏
-            if (HasBurnedOut() && !StatMaster.GodTools.UnbreakableMode)
+            if (HasBurnedOut && !StatMaster.GodTools.UnbreakableMode)
             {
                 currentLocking = null; LockingTimer = -1;
                 currentTarget = null;
@@ -312,32 +349,12 @@ namespace FiaoCombinedMod
             //鼠标瞄准模式
             if (模式.Value == 1 && !不聪明模式.IsActive)
             {
-                foreach (RaycastHit Hito in Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition)))
-                {
-                    if (!Hito.collider.isTrigger)
-                    {
-                        if (Hito.transform.position != this.transform.position)
-                        {
-                            currentTarget = Hito.transform.gameObject;
-                        }
-                    }
-                }
+                AcquireTarget(Camera.main.ScreenPointToRay(Input.mousePosition));
             }
             //按键瞄准模式
-            if (Key1.IsPressed && !HasBurnedOut() && 模式.Value == 0)
+            if (Key1.IsPressed && !HasBurnedOut && 模式.Value == 0)
             {
-                foreach (RaycastHit Hito in Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition)))
-                {
-                    if (!Hito.collider.isTrigger)
-                    {
-                        if (Hito.transform.position != this.transform.position && Hito.collider.attachedRigidbody != null)
-                        {
-                            currentLocking = Hito.transform.gameObject;
-                            LockingTimer = spaar.ModLoader.Configuration.GetFloat("LockingTimer", 4);
-                            LockingTimer = 0;
-                        }
-                    }
-                }
+                AcquireTarget(Camera.main.ScreenPointToRay(Input.mousePosition));
             }
 
             //按键瞄准模式-取消
@@ -347,29 +364,93 @@ namespace FiaoCombinedMod
                 currentTarget = null;
             }
 
-
+            //后坐力
+            if (VisualController == null) return;
+            if (VisualController.Block == null) return;
+            if (VisualController.Block.jointsToMe == null) return;
+            foreach (Joint Jo in VisualController.Block.jointsToMe)
+            {
+                if (VisualController == null) return;
+                if (VisualController.Block == null) return;
+                if (VisualController.Block.jointsToMe == null) return;
+                if (Jo.GetComponentInParent<CanonBlock>())
+                {
+                    CanonBlock cb = Jo.GetComponentInParent<CanonBlock>();
+                    if (!IsOverLoaded)
+                    {
+                        cb.knockbackSpeed = 8000 * ((100 - KnockBackBonusAdjuster.Value) / 100);
+                        cb.randomDelay = 0.000001f;
+                    }
+                    else { cb.knockbackSpeed = 8000; }
+                    shoott = StatMaster.isMP ? shoott : Input.GetMouseButtonDown(0);
+                    if (FireOnMouseClick.IsActive && 模式.Value == 1 && shoott) { cb.Shoot(); }
+                }
+            }
+            shoott = false;
         }
 
-        protected override void OnSimulateFixedUpdate()
+        public void shot()
         {
+            shoott = true;
+        }
+
+        public override void AcquireTarget(Ray ray)
+        {
+            if (模式.Value == 1 && 不聪明模式.IsActive)
+            {
+                AimPos = ray.origin + ray.direction * 镜头哪里.Value;
+            }
+            else
+            {
+                foreach (RaycastHit Hito in Physics.RaycastAll(ray))
+                {
+                    if (!Hito.collider.isTrigger)
+                    {
+                        if (!HasBurnedOut && 模式.Value == 0)
+                        {
+                            if (Hito.transform.position != this.transform.position && Hito.collider.attachedRigidbody != null)
+                            {
+                                currentLocking = Hito.transform.gameObject;
+                                LockingTimer = /*spaar.ModLoader.Configuration.GetFloat("LockingTimer", 4);*/ 4;
+                                LockingTimer = 0;
+                            }
+                        }
+                        else if (模式.Value == 1)
+                        {
+                            if (!不聪明模式.IsActive)
+                            {
+                                if (Hito.transform.position != this.transform.position)
+                                {
+                                    currentTarget = Hito.transform.gameObject;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public override void SimulateFixedUpdateAlways()
+        {
+            if (IsOverLoaded || StatMaster.isClient) return;
 
             LockingTimer -= Time.deltaTime * 3;
             size = 1 * this.transform.localScale.x * this.transform.localScale.y * this.transform.localScale.z;
-            this.GetComponent<Rigidbody>().mass = 2f * size;
-            float FireProg = this.GetComponentInChildren<FireController>().fireProgress;
+            Rigidbody.mass = 2f * size;
+            FireProg = this.IsBurning ? FireProg + 0.01f : FireProg;
             if (currentLocking != null)
             {
                 if (!IsInMovieMode)
                 {
-                    if (currentLocking.GetComponentInParent<MachineTrackerMyId>())
+                    if (currentLocking.GetComponentInParent<MyBlockInfo>())
                     {
-                        if (currentLocking.GetComponentInParent<MachineTrackerMyId>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
+                        if (currentLocking.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
                             currentLocking = null;
                         LockingTimer = -1;
                     }
                     else if (currentLocking.gameObject.name == "FieldDetector")
                     {
-                        foreach (Transform block in Machine.Active().SimulationMachine)
+                        foreach (Transform block in Machine.SimulationMachine)
                         {
                             if (block.name.Contains("Improved") && (block.position - currentLocking.transform.position).sqrMagnitude < 1)
                             {
@@ -399,7 +480,7 @@ namespace FiaoCombinedMod
 
             if (!IsInMovieMode)
             {
-                if (!HasBurnedOut() && !StatMaster.GodTools.UnbreakableMode)
+                if (!HasBurnedOut || StatMaster.GodTools.UnbreakableMode)
                 {
                     记录器 += (计算间隔.Value / 100) * (1 - FireProg);
                     if (currentTarget != null && 模式.Value != 1)
@@ -413,7 +494,7 @@ namespace FiaoCombinedMod
                     {
                         Auto(0);
                     }
-                    else if (模式.Value == 1 && !HasBurnedOut())
+                    else if (模式.Value == 1 && !HasBurnedOut)
                     {
                         MouseMode(FireProg);
                     }
@@ -424,20 +505,17 @@ namespace FiaoCombinedMod
                     IsOverLoaded =
                         (/*(前一帧速度 - this.GetComponent<Rigidbody>().velocity).sqrMagnitude >= 4f && 模式.Value == 0 && !IHaveConnectedWithCannons)
                         ||*/
-                        (前一帧速度 - this.rigidbody.velocity).sqrMagnitude >= 12500f * (Mathf.Log(97 - KnockBackBonusAdjuster.Value, 2)) && 模式.Value == 0)
+                        (前一帧速度 - this.Rigidbody.velocity).sqrMagnitude >= 12500f * (Mathf.Log(97 - KnockBackBonusAdjuster.Value, 2)) && 模式.Value == 0)
                         ;
                     if (IsOverLoaded)
                     {
                         OverLoadExplosion();
                         this.GetComponent<FireTag>().Ignite();
+                        p.l("Modified Tracking Computer Overloaded!");
                     }
                 }
                 else
-                {
-                    spaar.ModLoader.ModConsole.AddMessage(LogType.Warning, "Modified Tracking Computer Overloaded!");
-                    Destroy(GetComponent<ModifiedTurret>());
-                }
-                前一帧速度 = this.GetComponent<Rigidbody>().velocity;
+                    前一帧速度 = this.GetComponent<Rigidbody>().velocity;
             }
             else
             {
@@ -453,16 +531,20 @@ namespace FiaoCombinedMod
                 {
                     Auto(0);
                 }
-                else if (模式.Value == 1 && !HasBurnedOut())
+                else if (模式.Value == 1 && !HasBurnedOut)
                 {
                     MouseMode(0);
                 }
 
             }
-            累计质量 = this.rigidbody.mass;
-            foreach (Joint aRB in this.GetComponent<BlockBehaviour>().jointsToMe)
+            累计质量 = this.Rigidbody.mass;
+
+            if (VisualController == null) return;
+            if (VisualController.Block == null) return;
+            if (VisualController.Block.jointsToMe == null) return;
+            foreach (Joint aRB in VisualController.Block.jointsToMe)
             {
-                if (aRB != null)
+                if (aRB != null && aRB.gameObject != null && aRB.gameObject.GetComponentInParent<BlockBehaviour>() != null && aRB.gameObject.GetComponentInParent<BlockBehaviour>().Rigidbody != null)
                 {
                     aRB.gameObject.GetComponentInParent<BlockBehaviour>().Rigidbody.centerOfMass = (Vector3)aRB.gameObject?.GetComponentInParent<BlockBehaviour>()?.gameObject?.transform?.InverseTransformPoint(this.transform.position);
                     累计质量 += aRB.gameObject.GetComponentInParent<BlockBehaviour>().Rigidbody.mass;
@@ -472,27 +554,29 @@ namespace FiaoCombinedMod
         }
         void NonMouseMode(float FireProg)
         {
-            float Random = 1 + (0.5f - UnityEngine.Random.value) * 0.15f;
+            //float Random = 1 + (0.5f - UnityEngine.Random.value) * 0.15f;
+            float Random = 1;
             if (currentTarget.transform.position != this.transform.position)
             {
                 Vector3 LocalTargetDirection = currentTarget.transform.position;
                 if (炮力.Value != 0 && 记录器 >= 1)
                 {
-                    float targetVelo = currentTarget.GetComponent<Rigidbody>().velocity.magnitude;
+                    Rigidbody ctRgdBdy = currentTarget.GetComponent<Rigidbody>();
+                    float targetVelo = ctRgdBdy.velocity.magnitude;
                     记录器 = 0;
                     LocalTargetDirection = calculateNoneLinearTrajectory(
                         炮弹速度 * Random,
                         0.2f,
-                        this.transform.position,
+                        transform.position,
                         targetVelo,
                         currentTarget.transform.position,
-                        currentTarget.GetComponent<Rigidbody>().velocity.normalized,
+                        ctRgdBdy.velocity.normalized,
                             calculateLinearTrajectory(
                                 炮弹速度 * Random,
-                                this.transform.position,
+                                transform.position,
                                 targetVelo,
                                 currentTarget.transform.position,
-                                currentTarget.GetComponent<Rigidbody>().velocity.normalized
+                                ctRgdBdy.velocity.normalized
                             ),
                             Physics.gravity.y,
                             size * 精度.Value + 10 * size * FireProg,
@@ -514,7 +598,7 @@ namespace FiaoCombinedMod
                 {
                     LocalTargetDirection = new Vector3(LocalTargetDirection.x, this.transform.right.y, LocalTargetDirection.z);
                 }
-                float Difference = Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1);
+                float Difference = Vector3.Angle(transform.right, LocalTargetDirection - this.transform.position * 1);
                 //if (Difference > 精度.Value)
                 //{
                 //    this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized * RotatingSpeed;
@@ -524,18 +608,16 @@ namespace FiaoCombinedMod
                 //    this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg);
                 //}
 
-                float valuees = Mathf.Sign((this.transform.forward - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
-                转速乘子 = Math.Max(Math.Max(转速乘子 * valuees, 5), 转速乘子 / 2);
+                float valuees = Mathf.Sign((this.transform.right - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
+                转速乘子 = Math.Max(Math.Max(转速乘子 * valuees, 25), 转速乘子 / 2);
                 CorrTorq = getCorrTorque(
-                                    this.transform.forward,
+                                    this.transform.right,
                                     LocalTargetDirection - this.transform.position * 1,
-                                    rigidbody, 0.01f / size
+                                    Rigidbody, 0.01f / size
                                     )
                                 * Mathf.Rad2Deg;
 
-                this.Rigidbody.angularVelocity = (
-                    MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
-                    * RotatingSpeed * (累计质量 / this.rigidbody.mass));
+                ApplyAngularVelo();
 
                 float mag = (this.transform.right.normalized - LocalTargetDirection.normalized).magnitude;
                 if (Vector3.Angle(transform.right, LocalTargetDirection - this.transform.position * 1) > 0.01f * 精度.Value)
@@ -553,10 +635,26 @@ namespace FiaoCombinedMod
             }
         }
 
+        private void ApplyAngularVelo()
+        {
+            float 后坐力替换转速 = (1 - (KnockBackBonusAdjuster.Value / 95));
+            this.Rigidbody.angularVelocity = (
+                MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
+                * RotatingSpeed * (累计质量 / this.Rigidbody.mass) * (1 + 后坐力替换转速 * 5));
+        }
+
         void MouseMode(float FireProg)
         {
-            float Random = 1 + (0.5f - UnityEngine.Random.value * 0.1f);
-            Vector3 AimPos = GameObject.Find("Main Camera").GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 镜头哪里.Value));
+            //float Random = 1 + (0.5f - UnityEngine.Random.value * 0.1f);
+            float Random = 1;
+            if (StatMaster.isMP && Machine.Player.IsHost)
+            {
+                AimPos = GameObject.Find("Main Camera").GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 镜头哪里.Value));
+            }
+            if (!StatMaster.isMP)
+            {
+                AimPos = GameObject.Find("Main Camera").GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 镜头哪里.Value));
+            }
             if (AimPos != this.transform.position)
             {
                 Vector3 LocalTargetDirection = AimPos;
@@ -590,16 +688,6 @@ namespace FiaoCombinedMod
                     LocalTargetDirection = new Vector3(LocalTargetDirection.x, this.transform.right.y, LocalTargetDirection.z);
                 }
                 float Difference = Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1);
-                //if (Difference > 精度.Value)
-                //{
-                //    this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized * RotatingSpeed;
-                //}
-                //else
-                //{
-                //    this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg);
-                //}
-                //this.GetComponent<Rigidbody>().angularVelocity = (getCorrTorque(this.transform.right, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized * RotatingSpeed;
-
                 转速乘子 *= Mathf.Sign((this.transform.right - (LocalTargetDirection - this.transform.position).normalized).y) == -1 ? 1 + Math.Min(1 / (转速乘子 * 100), 0.005f) : 0.2f;
                 转速乘子 = Math.Max(1, 转速乘子);
 
@@ -610,9 +698,7 @@ namespace FiaoCombinedMod
                                 )
                             * Mathf.Rad2Deg;
 
-                this.Rigidbody.angularVelocity = (
-                    MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
-                    * RotatingSpeed * (累计质量 / this.rigidbody.mass));
+                ApplyAngularVelo();
 
 
                 float mag = (this.transform.right.normalized - LocalTargetDirection.normalized).magnitude;
@@ -640,7 +726,7 @@ namespace FiaoCombinedMod
                 {
                     FriendlyBlockGUID = new List<Guid>();
                     float range = 自动索敌友方范围.Value * 自动索敌友方范围.Value;
-                    foreach (Transform FriendlyOr in Machine.Active().SimulationMachine)
+                    foreach (Transform FriendlyOr in Machine.SimulationMachine)
                     {
                         if (range >= this.transform.InverseTransformPoint(FriendlyOr.transform.position).sqrMagnitude)
                         {
@@ -735,110 +821,110 @@ namespace FiaoCombinedMod
 
         }
 
-        void OverLoadExplosion()
-        {
-            GameObject explo = (GameObject)GameObject.Instantiate(PrefabMaster.BlockPrefabs[59].gameObject, this.transform.position, this.transform.rotation);
-            explo.transform.localScale = Vector3.one * 0.01f;
-            TimedRocket ac = explo.GetComponent<TimedRocket>();
-            ac.SetSlip(Color.white);
-            ac.radius = 0.00001f;
-            ac.power = 0.00001f;
-            ac.randomDelay = 0.000001f;
-            ac.upPower = 0;
-            ac.StartCoroutine(ac.Explode(0.01f));
-            explo.AddComponent<TimedSelfDestruct>();
-        }
-
-
         GameObject MyTargetSelector()
         {
-            List<MachineTrackerMyId> BBList = new List<MachineTrackerMyId>();
+            List<Block> BBList = new List<Block>();
             List<int> ThreatMultiplier = new List<int>();
-
-
-            foreach (MachineTrackerMyId BB in Machine.Active().SimulationMachine.GetComponentsInChildren<MachineTrackerMyId>())
+            bool onlyOneTeam = false;
+            if (StatMaster.isMP)
             {
-                if (FriendlyBlockGUID.Contains(BB.GetComponent<BlockBehaviour>().Guid))
+                onlyOneTeam = DetectIfOnlyOneTeamExists();
+            }
+            foreach (Player playyer in Player.GetAllPlayers())
+            {
+                if (playyer.Team == Machine.Player.Team && !onlyOneTeam)
                 {
+                    p.l("Same Team Encountered!");
                     continue;
                 }
-                NotEvenHavingAFireTag = BB.gameObject.GetComponent<FireTag>() == null;
-                int BBID = BB.myId;
-
-                if (BBID == 23 || BBID == 525 || BBID == 526 || BBID == 540 || BBID == 519)//Bombs, Tracking Computers
+                foreach (Block BB in playyer.Machine.SimulationBlocks)
                 {
-                    if (NotEvenHavingAFireTag)
+                    if (!StatMaster.isMP)
+                    {
+                        if (FriendlyBlockGUID.Contains(BB.Guid))
+                        {
+                            continue;
+                        }
+                    }
+                    NotEvenHavingAFireTag = BB.SimBlock.GameObject.GetComponent<FireTag>() == null;
+                    int BBID = BB.Prefab.Type;
+                    bool? burningN = (BB?.SimBlock?.GameObject?.GetComponent<FireTag>()?.burning);
+                    bool NotBurning = (burningN == null ? false : !(bool)burningN);
+                    if (BBID == 23 || BBID == 525 || BBID == 526 || BBID == 540 || BBID == 519)//Bombs, Tracking Computers
+                    {
+                        if (NotEvenHavingAFireTag)
+                        {
+                            BBList.Add(BB);
+                            ThreatMultiplier.Add(15);
+                        }
+                        else if (NotBurning)
+                        {
+                            BBList.Add(BB);
+                            ThreatMultiplier.Add(14);
+                        }
+                    }
+                    else if (BBID == 59 || BBID == 54 || BBID == 43 || BBID == 61)//Rocket & Grenade
                     {
                         BBList.Add(BB);
-                        ThreatMultiplier.Add(15);
+                        ThreatMultiplier.Add(12);
                     }
-                    else if (!BB.gameObject.GetComponent<FireTag>().burning)
+                    else if (BBID == 14 || BBID == 2 || BBID == 46 || BBID == 39)//Locomotion && Proplusion
+                    {
+                        if (BB?.SimBlock?.GameObject?.GetComponent<ConfigurableJoint>())
+                        {
+                            if (NotEvenHavingAFireTag)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(10);
+                            }
+                            else if (NotBurning)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(11);
+                            }
+                        }
+                    }
+                    else if (BBID == 26 || BBID == 55 || BBID == 52)//Propellers and balloon
                     {
                         BBList.Add(BB);
-                        ThreatMultiplier.Add(14);
+                        ThreatMultiplier.Add(8);
                     }
-                }
-                else if (BBID == 59 || BBID == 54 || BBID == 43 || BBID == 61)//Rocket & Grenade
-                {
-                    BBList.Add(BB);
-                    ThreatMultiplier.Add(12);
-                }
-                else if (BBID == 14 || BBID == 2 || BBID == 46 || BBID == 39)//Locomotion && Proplusion
-                {
-                    if (BB.gameObject.GetComponent<ConfigurableJoint>() != null)
+                    else if (BBID == 34 || BBID == 25  /**/  || BBID == 28 || BBID == 4 || BBID == 18 || BBID == 27 || BBID == 3 || BBID == 20)//Large Aero Blocks/Mechanic Blocks
                     {
-                        if (NotEvenHavingAFireTag)
+                        if (BB?.SimBlock?.GameObject?.GetComponent<ConfigurableJoint>())
                         {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(10);
-                        }
-                        else if (!BB.gameObject.GetComponent<FireTag>().burning)
-                        {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(11);
+                            if (NotEvenHavingAFireTag)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(4);
+                            }
+                            else if (NotBurning)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(6);
+                            }
                         }
                     }
-                }
-                else if (BBID == 26 || BBID == 55 || BBID == 52)//Propellers and balloon
-                {
-                    BBList.Add(BB);
-                    ThreatMultiplier.Add(8);
-                }
-                else if (BBID == 34 || BBID == 25  /**/  || BBID == 28 || BBID == 4 || BBID == 18 || BBID == 27 || BBID == 3 || BBID == 20)//Large Aero Blocks/Mechanic Blocks
-                {
-                    if (BB.gameObject.GetComponent<ConfigurableJoint>() != null)
+                    else if (BBID == 35 || BBID == 16 || BBID == 42 /**/ || BBID == 40 || BBID == 60 || BBID == 38 || BBID == 51 /**/ || BBID == 1 || BBID == 15 || BBID == 41 || BBID == 5)//Structure Block
                     {
-                        if (NotEvenHavingAFireTag)
+                        if (BB?.SimBlock?.GameObject?.GetComponent<ConfigurableJoint>())
                         {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(4);
-                        }
-                        else if (!BB.gameObject.GetComponent<FireTag>().burning)
-                        {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(6);
-                        }
-                    }
-                }
-                else if (BBID == 35 || BBID == 16 || BBID == 42 /**/ || BBID == 40 || BBID == 60 || BBID == 38 || BBID == 51 /**/ || BBID == 1 || BBID == 15 || BBID == 41 || BBID == 5)//Structure Block
-                {
-                    if (BB.gameObject.GetComponent<ConfigurableJoint>() != null)
-                    {
-                        if (NotEvenHavingAFireTag)
-                        {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(1);
-                        }
-                        else if (!BB.gameObject.GetComponent<FireTag>().burning)
-                        {
-                            BBList.Add(BB);
-                            ThreatMultiplier.Add(2);
+                            if (NotEvenHavingAFireTag)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(1);
+                            }
+                            else if (NotBurning == false)
+                            {
+                                BBList.Add(BB);
+                                ThreatMultiplier.Add(2);
+                            }
                         }
                     }
-                }
 
+                }
             }
-            foreach (MachineTrackerMyId BB2 in BBList.ToArray())
+            foreach (Block BB2 in BBList.ToArray())
             {
                 //删除不符合条件的结果
                 int RemoveId = BBList.IndexOf(BB2);
@@ -852,6 +938,7 @@ namespace FiaoCombinedMod
 
             if (BBList.Count == 0)
             {
+                p.l("No Hostile Target!");
                 return null;
                 //targetPoint = this.transform.TransformPoint(EulerToDirection(this.transform.eulerAngles.x, 45) * 200);
                 //if ((this.transform.position - targetPoint).sqrMagnitude <= 100 || targetPoint.y <= 45)
@@ -863,18 +950,18 @@ namespace FiaoCombinedMod
             }
             else
             {
-                //foreach (MachineTrackerMyId BNB in BBList)
+                //foreach (MyBlockInfo BNB in BBList)
                 for (int Index = UnityEngine.Random.Range(0, BBList.Count - 1); Index < BBList.Count; ++Index)
                 {
                     if (ThreatMultiplier.Count == Index + 1)
                     {
-                        NotEvenHavingAJoint = !BBList[Index].gameObject.GetComponent<ConfigurableJoint>();
-                        NotEvenHavingAFireTag = !BBList[Index].gameObject.GetComponent<FireTag>();
+                        NotEvenHavingAJoint = !BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>();
+                        NotEvenHavingAFireTag = !BBList[Index].SimBlock.GameObject.GetComponent<FireTag>();
                         if (!NotEvenHavingAJoint)
                         {
-                            BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce = Mathf.Min(BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce, 45000);
+                            BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>().breakForce = Mathf.Min(BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>().breakForce, 45000);
                         }
-                        return (BBList[Index].gameObject);
+                        return (BBList[Index].SimBlock.GameObject);
                     }
                     if (ThreatMultiplier[Index + 1] <= ThreatMultiplier[Index])
                     {
@@ -882,25 +969,39 @@ namespace FiaoCombinedMod
                         BBList.RemoveAt(Index + 1);
                         continue;
                     }
-                    //if (new Vector3(Diff.x, Diff.y, 0).sqrMagnitude < OnScreenCloseEnoughDistSqr)
-                    //{
-                    //    ThreatMultiplier.RemoveAt(Index);
-                    //    BBList.RemoveAt(Index);
-                    //    continue;
-                    //}
-                    //else
-                    //{
-                    NotEvenHavingAJoint = !BBList[Index].gameObject.GetComponent<ConfigurableJoint>();
-                    NotEvenHavingAFireTag = !BBList[Index].gameObject.GetComponent<FireTag>();
+                    NotEvenHavingAJoint = !BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>();
+                    NotEvenHavingAFireTag = !BBList[Index].SimBlock.GameObject.GetComponent<FireTag>();
                     if (!NotEvenHavingAJoint)
                     {
-                        BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce = Mathf.Min(BBList[Index].gameObject.GetComponent<ConfigurableJoint>().breakForce, 45000);
+                        BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>().breakForce = Mathf.Min(BBList[Index].SimBlock.GameObject.GetComponent<ConfigurableJoint>().breakForce, 45000);
                     }
-                    return (BBList[Index].gameObject);
-                    //}
+                    return (BBList[Index].SimBlock.GameObject);
                 }
+                p.l("No appropriate target!");
                 return null;
             }
+        }
+
+        private bool DetectIfOnlyOneTeamExists()
+        {
+            bool onlyOneTeam = true;
+            foreach (Player playyer in Player.GetAllPlayers())
+            {
+                if ((playyer.Team != Machine.Player.Team))
+                {
+                    onlyOneTeam = false;
+                    break;
+                }
+            }
+            return onlyOneTeam;
+        }
+
+        public override void SetUpAudioAndVis()
+        {
+            Audio = this.gameObject.AddComponent<AudioSource>();
+            Audio.clip = Modding.ModResource.GetAudioClip("FiaoCombinedMod/炮台旋转音效.ogg");
+            Audio.loop = false;
+            Audio.volume = 0.2f;
         }
     }
 

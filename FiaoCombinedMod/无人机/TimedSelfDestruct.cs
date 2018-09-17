@@ -1,8 +1,4 @@
-﻿using System;
-using spaar.ModLoader;
-using UnityEngine;
-using System.Collections.Generic;
-using System.Collections;
+﻿using UnityEngine;
 
 namespace FiaoCombinedMod
 {

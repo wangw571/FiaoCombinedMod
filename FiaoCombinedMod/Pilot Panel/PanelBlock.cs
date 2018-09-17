@@ -1,30 +1,29 @@
-﻿using spaar.ModLoader;
+﻿using Modding;
+using Modding.Blocks;
+using Modding.Common;
 using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 
 namespace FiaoCombinedMod
 {
-    public class PilotPanelScript : BlockScript
+    public class PilotPanelScript : Modding.BlockScript
     {
         public Rect AutoLockRange;
 
         private MKey ActivateTargetIndicator;
-        private MToggle HideThisPanel;
-        private MToggle AdvTI;
+        private MToggle HideThisPanel, AdvTI;
         private MSlider AdvTIS;
-        private MColourSlider StartColour;
-        private MColourSlider EndColour;
+        private MSlider MiniMapLerpValue, MiniMapHeight;
+        private MSlider LockerHeight, LockerWidth;
+        private MColourSlider StartColour, EndColour;
         private MKey ActiveHUD;
         private MKey HidePanel;
 
         private MToggle ReduceCameraShake;
 
-        //public MToggle UseLockWindow;
+        public MToggle UseLockWindow;
 
         private MToggle Pitch, Center, Direction, MapCenter, Height, IceFreezeIndicator, GroundIndicator, OneThousandIndicator, HeightIndicator, MiniMap;
 
@@ -38,6 +37,7 @@ namespace FiaoCombinedMod
         public GameObject MiniMapGO;
         public Camera MiniMapCamera;
         public RenderTexture RTCamera;
+        public Rect LockerRect;
 
 
         private GameObject BombDrop;
@@ -45,18 +45,9 @@ namespace FiaoCombinedMod
 
         public Vector3 displacement, velocity, rotation, direction, horizontal, bombposition, vel1, vel0;
         public float T1, dt, T_hitground, alt = 0, climbrate = 0;
-        private float acce = 0;
-        private float overload = 0;
-        private float yaw = 0;
-        private float pitch = 0;
-        private float roll = 0;
+        private float acce, overload, yaw, pitch, roll = 0;
 
-        private float row1 = 0;
-        private float row2 = 0;
-        private float row3 = 0;
-        private float tic = 0;
-        private float ticc = 0;
-        private float toc = 0;
+        private float row1, row2, row3, tic, ticc, toc = 0;
 
 
 
@@ -74,7 +65,8 @@ namespace FiaoCombinedMod
         private Texture 俯仰刻度, 机体准星, 正00纹理, 负00纹理, 冰层纹理, 地面那一条杠杠滴纹理, 现时高度指示纹理, 一千杠杠, 北罗盘纹理, 南罗盘纹理
             , 西罗盘纹理
             , 东罗盘纹理
-            , 小罗盘纹理, 小地图纹理;
+            , 小罗盘纹理, 小地图纹理,
+            锁定窗口;
 
         //private GameObject 冲刺效果 = GameObject.CreatePrimitive(PrimitiveType.Plane);
 
@@ -83,8 +75,8 @@ namespace FiaoCombinedMod
         public int 比较用高度计状态 = 0; //-1 地底   0 冰层下   1 1000下   2 1000上
         public Vector2 pos = new Vector2(Screen.width / 2, Screen.height / 2);
         public float 调试函数 = 0;
-        private Key LCF1 = new Key(KeyCode.LeftControl, KeyCode.F2);
-        private Key RCF1 = new Key(KeyCode.RightControl, KeyCode.F2);
+        //private Key LCF1 = new Key(KeyCode.LeftControl, KeyCode.F2);
+        //private Key RCF1 = new Key(KeyCode.RightControl, KeyCode.F2);
         private float CurrentCameraSpeed;
         private float 速度标记位置 = 0;
         public bool 强制关闭 = false;
@@ -94,17 +86,18 @@ namespace FiaoCombinedMod
 
         private float LastFUveloMag;
 
-        delegate void Init();
+        private delegate void Init();
 
-        MouseOrbit MainMo;
+        private MouseOrbit MainMo;
 
         public override void SafeAwake()
         {
-            Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInit) : new Init(EnglishInit);
+            Init init = /*Configuration.GetBool("UseChinese", false)*/ false ? new Init(ChineseInit) : new Init(EnglishInit);
             init();
 
         }
-        void ChineseInit()
+
+        private void ChineseInit()
         {
             ActivateTargetIndicator = AddKey("投弹指示光斑", //按键信息
                                  "TI",           //名字
@@ -121,9 +114,9 @@ namespace FiaoCombinedMod
                                        false);             //默认状态
             AdvTIS = AddSlider("投弹指示器线段数量", "LineAmt", 20f, 2f, 45f);
 
-            StartColour = AddColourSlider("投弹指示器起始色", "SColor", Color.red);
+            StartColour = AddColourSlider("投弹指示器起始色", "SColor", Color.red, true);
 
-            EndColour = AddColourSlider("投弹指示器结束色", "EColor", Color.yellow);
+            EndColour = AddColourSlider("投弹指示器结束色", "EColor", Color.yellow, true);
 
 
             ConfigMenu = AddMenu("ConfigMenu", 0, new List<string> { "飞行信息设置", "HUD设置" });
@@ -141,14 +134,18 @@ namespace FiaoCombinedMod
             GroundIndicator = AddToggle("地面指示", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m指示", "1000mIndi", true);
             MiniMap = AddToggle("小地图", "Minimap", false);
-            //UseLockWindow = AddToggle("使用锁定窗口", "UseLockWindow", false);
+            MiniMapLerpValue = AddSlider("小地图平滑度", "MinimapLerp", 0.015f, 0, 1);
+            MiniMapHeight = AddSlider("小地图高度", "MinimapHeight", 400, 5, 1300);
+            UseLockWindow = AddToggle("使用预锁定窗口", "UseLockWindow", false);
+            LockerHeight = AddSlider("预锁定窗口高度", "LockerH", 800, 100, 2000);
+            LockerWidth = AddSlider("预锁定窗口宽度", "LockerW", 800, 100, 2000);
 
             ReduceCameraShake = AddToggle("减轻相机抖动", "Noshake", false);
         }
 
-        void EnglishInit()
+        private void EnglishInit()
         {
-            ActivateTargetIndicator = AddKey("Target Indicator", //按键信息
+            ActivateTargetIndicator = AddKey("Bombard Indicator", //按键信息
                                  "TI",           //名字
                                  KeyCode.C);       //默认按键
 
@@ -158,54 +155,38 @@ namespace FiaoCombinedMod
 
             //HidePanel = AddKey("Hide Panel", "Panel", KeyCode.Backspace);
 
-            AdvTI = AddToggle("ADVANCED \n Target Indicator",   //toggle信息
+            AdvTI = AddToggle("ADVANCED \n Bombard Indicator",   //toggle信息
                                        "AdvTI",       //名字
                                        false);             //默认状态
-            AdvTIS = AddSlider("Amount of Lines", "LineAmt", 20f, 2f, 45f);
+            AdvTIS = AddSlider("Smoothness of Indicator", "LineAmt", 20f, 2f, 45f);
 
-            StartColour = AddColourSlider("Start Color of the line", "SColor", Color.red);
+            StartColour = AddColourSlider("Start Color of the line", "SColor", Color.red, true);
 
-            EndColour = AddColourSlider("End Color of the line", "EColor", Color.yellow);
+            EndColour = AddColourSlider("End Color of the line", "EColor", Color.yellow, true);
 
 
             ConfigMenu = AddMenu("ConfigMenu", 0, new List<string> { "Pilot Panel Func", "HUD Func" });
-            HUDConfigMenu = AddMenu("HUDConfigMenu", 0, new List<string> { "Center", "Height", "Pitch", "Direction", "Map Center", "Minimap"/*, "General"*/ });
+            HUDConfigMenu = AddMenu("HUDConfigMenu", 0, new List<string> { "Center", "Height", "Pitch", "Direction", "Map Center", "Minimap", "Locking" });
             ActiveHUD = AddKey("Toggle HUD", "HUD", KeyCode.F);
             Height = AddToggle("Height Indication", "HeightIndi", true);
             Pitch = AddToggle("Pitch Indication", "PitchIndi", true);
             Center = AddToggle("Center Indication", "CenterIndi", true);
-            Direction = AddToggle("Direction Indication", "DirectIndi", true);
+            Direction = AddToggle("Compass Indication", "DirectIndi", true);
             MapCenter = AddToggle("Map Center Indication", "MapCenterIndi", true);
             HeightIndicator = AddToggle("Height Indication", "MyHeightIndi", true);
             IceFreezeIndicator = AddToggle("Ice Freeze Indication", "IceIndi", true);
             GroundIndicator = AddToggle("Ground(0m) Indication", "0mIndi", true);
             OneThousandIndicator = AddToggle("1000m Indication", "1000mIndi", true);
             MiniMap = AddToggle("Minimap", "Minimap", false);
-            //UseLockWindow = AddToggle("Use Locking Window", "UseLockWindow", false);
+            MiniMapLerpValue = AddSlider("Minimap smoothess", "MinimapLerp", 0.015f, 0, 1);
+            MiniMapHeight = AddSlider("Minimap height", "MinimapHeight", 400, 5, 1300);
+            UseLockWindow = AddToggle("Enable Locking Window", "UseLockWindow", false);
+            LockerHeight = AddSlider("Locking Window Height", "LockerH", 800, 100, 2000);
+            LockerWidth = AddSlider("Locking Window Width", "LockerW", 800, 100, 2000);
 
-            ReduceCameraShake = AddToggle("Make Camera No Longer Shake Or Lerp After Focused On A Block", "Noshake", false);
+            ReduceCameraShake = AddToggle("Reduce Camera Shake When Focused", "Noshake", false);
         }
-        protected virtual IEnumerator UpdateMapper()
-        {
-            if (BlockMapper.CurrentInstance == null)
-                yield break;
-            while (Input.GetMouseButton(0))
-                yield return null;
-            BlockMapper.CurrentInstance.Copy();
-            BlockMapper.CurrentInstance.Paste();
-            yield break;
-        }
-        public override void OnSave(XDataHolder data)
-        {
-            SaveMapperValues(data);
-        }
-        public override void OnLoad(XDataHolder data)
-        {
-            LoadMapperValues(data);
-            if (data.WasSimulationStarted) return;
-        }
-
-        protected override void BuildingUpdate()
+        public override void BuildingUpdate()
         {
             ActivateTargetIndicator.DisplayInMapper = ConfigMenu.Value == 0;
             HideThisPanel.DisplayInMapper = ConfigMenu.Value == 0;
@@ -223,8 +204,12 @@ namespace FiaoCombinedMod
             Center.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 0;
             MapCenter.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 4;
             MiniMap.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 5;
+            MiniMapLerpValue.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 5;
+            MiniMapHeight.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 5;
             Direction.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 3;
-            //UseLockWindow.DisplayInMapper = ConfigMenu.Value == 1;
+            UseLockWindow.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 6;
+            LockerHeight.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 6;
+            LockerWidth.DisplayInMapper = ConfigMenu.Value == 1 && HUDConfigMenu.Value == 6;
 
             HeightIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
             IceFreezeIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
@@ -232,8 +217,9 @@ namespace FiaoCombinedMod
             OneThousandIndicator.DisplayInMapper = ConfigMenu.Value == 1 && Height.IsActive && HUDConfigMenu.Value == 1;
         }
 
-        protected override void OnSimulateStart()
+        public override void OnSimulateStart()
         {
+            LockerRect = new Rect(new Vector2(Screen.width / 2 - LockerHeight.Value / 2, Screen.height / 2 - LockerWidth.Value / 2), new Vector2(LockerHeight.Value, LockerWidth.Value));
             ticc = Time.time;
             disp = !HideThisPanel.IsActive;
 
@@ -266,26 +252,27 @@ namespace FiaoCombinedMod
 
             }
 
-            机体准星 = Center.IsActive ? resources["HUD/Center.png"].texture : null;
-            俯仰刻度 = Pitch.IsActive ? resources["HUD/Gradienter.png"].texture : null;
-            正00纹理 = MapCenter.IsActive ? resources["HUD/Zero Zero Front.png"].texture : null;
-            负00纹理 = MapCenter.IsActive ? resources["HUD/Zero Zero Back.png"].texture : null;
-            现时高度指示纹理 = HeightIndicator.IsActive ? resources["HUD/Height Line.png"].texture : null;
-            冰层纹理 = IceFreezeIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/Ice Floor.png"].texture : null;
-            地面那一条杠杠滴纹理 = GroundIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/Floor Line.png"].texture : null;
-            一千杠杠 = OneThousandIndicator.IsActive && HeightIndicator.IsActive ? resources["HUD/OverICE Line.png"].texture : null;
-            北罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator North.png"].texture : null;
-            南罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator South.png"].texture : null;
-            西罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator East.png"].texture : null;
-            东罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator West.png"].texture : null;
-            小罗盘纹理 = Direction.IsActive ? resources["HUD/Direction Indicator Small.png"].texture : null;
-            小地图纹理 = MiniMap.IsActive ? resources["HUD/Minimap Addition.png"].texture : null;
+            机体准星 = Center.IsActive ? ModResource.GetTexture("HUD/Center.png") : null;
+            俯仰刻度 = Pitch.IsActive ? ModResource.GetTexture("HUD/Gradienter.png") : null;
+            正00纹理 = MapCenter.IsActive ? ModResource.GetTexture("HUD/Zero Zero Front.png") : null;
+            负00纹理 = MapCenter.IsActive ? ModResource.GetTexture("HUD/Zero Zero Back.png") : null;
+            现时高度指示纹理 = HeightIndicator.IsActive ? ModResource.GetTexture("HUD/Height Line.png") : null;
+            冰层纹理 = IceFreezeIndicator.IsActive && HeightIndicator.IsActive ? ModResource.GetTexture("HUD/Ice Floor.png") : null;
+            地面那一条杠杠滴纹理 = GroundIndicator.IsActive && HeightIndicator.IsActive ? ModResource.GetTexture("HUD/Floor Line.png") : null;
+            一千杠杠 = OneThousandIndicator.IsActive && HeightIndicator.IsActive ? ModResource.GetTexture("HUD/OverICE Line.png") : null;
+            北罗盘纹理 = Direction.IsActive ? ModResource.GetTexture("HUD/Direction Indicator North.png") : null;
+            南罗盘纹理 = Direction.IsActive ? ModResource.GetTexture("HUD/Direction Indicator South.png") : null;
+            西罗盘纹理 = Direction.IsActive ? ModResource.GetTexture("HUD/Direction Indicator East.png") : null;
+            东罗盘纹理 = Direction.IsActive ? ModResource.GetTexture("HUD/Direction Indicator West.png") : null;
+            小罗盘纹理 = Direction.IsActive ? ModResource.GetTexture("HUD/Direction Indicator Small.png") : null;
+            小地图纹理 = MiniMap.IsActive ? ModResource.GetTexture("HUD/Minimap Addition.png") : null;
+            锁定窗口 = UseLockWindow.IsActive? ModResource.GetTexture("HUD/Locker.png") : null;
 
 
             if (MiniMap.IsActive)
             {
                 MiniMapGO = new GameObject("MiniMapCam");
-                MiniMapGO.transform.SetParent(Machine.Active().SimulationMachine);
+                MiniMapGO.transform.SetParent(Machine.SimulationMachine);
                 MiniMapCamera = MiniMapGO.AddComponent<Camera>();
                 MiniMapCamera.CopyFrom(Camera.main);
                 MiniMapCamera.aspect = 1;
@@ -305,14 +292,25 @@ namespace FiaoCombinedMod
 
         }
 
-        protected override void OnSimulateFixedUpdate()
+        public void SetParams(Vector3 dis, Vector3 velo, Vector3 rotat)
         {
+            displacement = dis;
+            velocity = velo;
+            rotation = rotat;
+        }
 
-
-            displacement = this.GetComponent<Rigidbody>().position;
-            velocity = this.GetComponent<Rigidbody>().velocity;
-            rotation = this.GetComponent<Rigidbody>().rotation.eulerAngles;
-            direction = this.transform.forward;
+        public override void SimulateFixedUpdateAlways()
+        {
+            if (!StatMaster.isClient)
+            {
+                SetParams(Vector3.Lerp(displacement, Rigidbody.position, 0.2f), Vector3.Lerp(velocity, Rigidbody.velocity, 0.2f), Vector3.Lerp(rotation, Rigidbody.rotation.eulerAngles, 0.2f));
+            }
+            if (StatMaster.isMP && StatMaster.isHosting)
+            {
+                Message syncc = Messages.PilotPanelSync.CreateMessage(Block.From(this), displacement, velocity, rotation);
+                ModNetworking.SendTo(Machine.Player, syncc);
+            }
+            direction = transform.forward;
             horizontal = new Vector3(-direction.z / direction.x, 0f, 1f).normalized;
 
             T1 = Time.time;
@@ -337,7 +335,7 @@ namespace FiaoCombinedMod
 
 
         }
-        protected override void OnSimulateUpdate()
+        public override void SimulateUpdateAlways()
         {
             if (!MainMo)
             {
@@ -346,7 +344,7 @@ namespace FiaoCombinedMod
             MainMo.focusLerpSmooth = ReduceCameraShake.IsActive ? 999999999999999 : 8;
 
             if (MiniMap.IsActive)
-                MiniMapGO.transform.SetParent(Machine.Active().SimulationMachine);
+                MiniMapGO.transform.SetParent(Machine.SimulationMachine);
 
             if (ActivateTargetIndicator.IsReleased)
             {
@@ -444,7 +442,8 @@ namespace FiaoCombinedMod
 
         public void OnGUI()
         {
-            if (disp && StatMaster.isSimulating)
+            if (StatMaster.isMP && (Machine.Player != Player.GetLocalPlayer())) return;
+            if (disp && Game.IsSimulating)
             {
 
                 GUILayout.BeginArea(new Rect(0f, 58f, 200f, 400f));
@@ -567,7 +566,7 @@ namespace FiaoCombinedMod
 
         }
 
-        void OnHUDGUI()
+        private void OnHUDGUI()
         {
             float 全局屏幕比值W = Screen.width / 1920;
             float 全局屏幕比值H = Screen.height / 1080;
@@ -610,6 +609,10 @@ namespace FiaoCombinedMod
             if (Center.IsActive)
             {
                 GUI.DrawTexture(new Rect(new Vector2(Screen.width / 2 - 400, Screen.height / 2 - 400), new Vector2(800, 800)), 机体准星);
+            }
+            if (Center.IsActive)
+            {
+                GUI.DrawTexture(LockerRect, 锁定窗口);
             }
             GUIUtility.RotateAroundPivot(MainCameraTransform.eulerAngles.z, new Vector2(Screen.width / 2, Screen.height / 2));
             float FOVHeight = 180 / MainCameraTransform.GetComponent<Camera>().fieldOfView;
@@ -677,33 +680,43 @@ namespace FiaoCombinedMod
 
             if (MiniMap.IsActive)
             {
-                MiniMapCamera.transform.position = this.transform.position + Vector3.up * 400;
-                MiniMapCamera.transform.LookAt(Vector3.Lerp(PreviousMiniMapLookAtPosition, this.transform.position - Vector3.up * 400 + (this.rigidbody.velocity.sqrMagnitude > 1 ? this.rigidbody.velocity.normalized * 10 : this.transform.forward), 0.015f)); ;
-                PreviousMiniMapLookAtPosition = this.transform.position - Vector3.up * 400 + (this.rigidbody.velocity.sqrMagnitude > 11 ? this.rigidbody.velocity.normalized * 10 : this.transform.forward);
-                MiniMapCamera.targetTexture = RTCamera;
-                MiniMapCamera.clearFlags = CameraClearFlags.Color;
-                MiniMapCamera.orthographicSize = Mathf.Max(150, 150 + this.transform.position.y);
-                int 长 = Mathf.Min(Screen.width, Screen.height);
-                GUI.DrawTexture(
-                        new Rect(
-                            new Vector2(
-                                Screen.width * 7 / 10,
-                                Screen.height * 7 / 10),
-                            new Vector2(长 / 5, 长 / 5)),
-                        RTCamera);
-                GUI.DrawTexture(
-                        new Rect(
-                            new Vector2(
-                                Screen.width * 7 / 10 - 25,
-                                Screen.height * 7 / 10 - 25),
-                            new Vector2(长 / 5 + 50, 长 / 5 + 50)),
-                        小地图纹理);
+                MiniMapDrawing();
             }
 
             float angel = Mathf.Atan2((Screen.height / 6) * 2, Screen.width / 2) * Mathf.Rad2Deg;
             GUIUtility.RotateAroundPivot(angel, new Vector2(Screen.width / 2, Screen.height / 2));
         }
-        void 不旋转限制绘制罗盘(float 输入方向, Texture 纹理, float 比例)
+
+        private void MiniMapDrawing()
+        {
+            MiniMapCamera.transform.position = this.transform.position + Vector3.up * MiniMapHeight.Value;
+            MiniMapCamera.transform.LookAt(
+                Vector3.Lerp(
+                    PreviousMiniMapLookAtPosition,
+                    this.transform.position - Vector3.up * 400 + (velocity.sqrMagnitude > 1 ? velocity.normalized * 10 : transform.forward),
+                    MiniMapLerpValue.Value * 0.1f)); ;
+            PreviousMiniMapLookAtPosition = this.transform.position - Vector3.up * 400 + (velocity.sqrMagnitude > 11 ? velocity.normalized * 10 : this.transform.forward);
+            MiniMapCamera.targetTexture = RTCamera;
+            MiniMapCamera.clearFlags = CameraClearFlags.Color;
+            MiniMapCamera.orthographicSize = Mathf.Max(150, 150 + this.transform.position.y);
+            int 长 = Mathf.Min(Screen.width, Screen.height);
+            GUI.DrawTexture(
+                    new Rect(
+                        new Vector2(
+                            Screen.width * 7 / 10,
+                            Screen.height * 7 / 10),
+                        new Vector2(长 / 5, 长 / 5)),
+                    RTCamera);
+            GUI.DrawTexture(
+                    new Rect(
+                        new Vector2(
+                            Screen.width * 7 / 10 - 25,
+                            Screen.height * 7 / 10 - 25),
+                        new Vector2(长 / 5 + 50, 长 / 5 + 50)),
+                    小地图纹理);
+        }
+
+        private void 不旋转限制绘制罗盘(float 输入方向, Texture 纹理, float 比例)
         {
             float TheValue = Screen.width * (Mathf.Sin(-输入方向 * Mathf.Deg2Rad));
             if (Math.Abs(TheValue) >= 比例 * Screen.width)
@@ -719,7 +732,8 @@ namespace FiaoCombinedMod
             new Vector2(200, 200)),
             纹理);
         }
-        void 绘制罗盘(float 输入方向, Texture 纹理, Matrix4x4 正常矩阵)
+
+        private void 绘制罗盘(float 输入方向, Texture 纹理, Matrix4x4 正常矩阵)
         {
             GUIUtility.RotateAroundPivot(
             -输入方向,
@@ -736,7 +750,8 @@ namespace FiaoCombinedMod
             纹理);
             GUI.matrix = 正常矩阵;
         }
-        void 绘制下冰层高度计(float CurrentHeight)
+
+        private void 绘制下冰层高度计(float CurrentHeight)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             float IceFreezehickness = ICEtrans.localScale.y;
@@ -752,7 +767,8 @@ namespace FiaoCombinedMod
             }
             GUI.DrawTexture(new Rect(new Vector2(Screen.width / 2 - 100 * IF比 - 283.5f * IF比, Screen.height / 1080 * 40 * IF比 + (100 * IF比 / IceFreezehickness * (IceCenterHeight - CurrentHeight))), new Vector2(283.5f * IF比, 10)), 现时高度指示纹理);
         }
-        void 绘制下千高度计(float CurrentHeight)
+
+        private void 绘制下千高度计(float CurrentHeight)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             float IceFreezehickness = ICEtrans.localScale.y;
@@ -773,7 +789,8 @@ namespace FiaoCombinedMod
             }
             GUI.DrawTexture(new Rect(new Vector2(Screen.width / 2 - 100 * IF比 - 283.5f * IF比 * 千比, Screen.height / 1080 * 800 * IF比 - 千比 * CurrentHeight), new Vector2(283.5f * IF比 * 千比, 10)), 现时高度指示纹理);
         }
-        void 绘制随意高度计(float CurrentHeight)
+
+        private void 绘制随意高度计(float CurrentHeight)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             float IceFreezehickness = ICEtrans.localScale.y;
@@ -794,7 +811,8 @@ namespace FiaoCombinedMod
                 GUI.DrawTexture(new Rect(new Vector2(Screen.width / 2 - 100 * IF比 - 283.5f * IF比 * 自比, Screen.height / 1080 * 800 * IF比 - 自比 * IceCenterHeight), new Vector2(283.5f * IF比 * 自比, 100 * IF比 * 自比)), 冰层纹理);
             }
         }
-        void 绘制天花板高度计(float CurrentHeight)
+
+        private void 绘制天花板高度计(float CurrentHeight)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             float IceFreezehickness = ICEtrans.localScale.y;
@@ -840,7 +858,8 @@ namespace FiaoCombinedMod
                 地面那一条杠杠滴纹理);
             }
         }
-        void 绘制0到1渐变高度计(float CurrentHeight, int ToSituation)
+
+        private void 绘制0到1渐变高度计(float CurrentHeight, int ToSituation)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             if (渐变高度计使用的临时函数 == 0) 渐变高度计使用的临时函数 = Time.time;
@@ -909,7 +928,8 @@ namespace FiaoCombinedMod
                 渐变高度计使用的临时函数 = 0;
             }
         }
-        void 绘制1到0渐变高度计(float CurrentHeight, int ToSituation)
+
+        private void 绘制1到0渐变高度计(float CurrentHeight, int ToSituation)
         {
             Transform ICEtrans = GameObject.Find("ICE FREEZE").transform;
             if (渐变高度计使用的临时函数 == 0) 渐变高度计使用的临时函数 = Time.time;
@@ -975,7 +995,8 @@ namespace FiaoCombinedMod
                 渐变高度计使用的临时函数 = 0;
             }
         }
-        int 判断高度计状态(float Height)
+
+        private int 判断高度计状态(float Height)
         {
             int 最终状态;
             if (GameObject.Find("ICE FREEZE"))
@@ -1021,7 +1042,7 @@ namespace FiaoCombinedMod
         }
 
 
-        protected override void OnSimulateExit()
+        public override void OnSimulateStop()
         {
             Destroy(ShowHUD);
         }

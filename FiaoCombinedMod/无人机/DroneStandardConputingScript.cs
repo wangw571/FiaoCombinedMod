@@ -1,13 +1,10 @@
 ﻿using System;
-using spaar.ModLoader;
 using UnityEngine;
-using System.Collections.Generic;
-using System.Collections;
 
 namespace FiaoCombinedMod
 {
 
-    public class DroneStandardConputingScript : BlockScript
+    public class DroneStandardConputingScript : Modding.BlockScript
     {
         //public DroneControlBlockBehavior Parent;
         protected GameObject Shooter;
@@ -254,7 +251,7 @@ namespace FiaoCombinedMod
             catch { return Vector3.zero; }
         }
 
-        protected override void OnSimulateStart()
+        public override void OnSimulateStart()
         {
             /*AD = this.gameObject.AddComponent<BxialDrag>();
             InstantPropeller = GameObject.CreatePrimitive(PrimitiveType.Plane);

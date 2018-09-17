@@ -1,8 +1,7 @@
 ﻿using System;
-using spaar.ModLoader;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
+using Modding;
 
 namespace FiaoCombinedMod
 {
@@ -33,7 +32,7 @@ namespace FiaoCombinedMod
 
         public override void SafeAwake()
         {
-            Init init = Configuration.GetBool("UseChinese", false) ? new Init(ChineseInilization) : new Init(EnglishInilization);
+            Init init = /*Configuration.GetBool("UseChinese", false)*/ false ? new Init(ChineseInilization) : new Init(EnglishInilization);
             init();
         }
         void EnglishInilization()
@@ -63,22 +62,13 @@ namespace FiaoCombinedMod
             DroneTag = AddSlider("无人机操控标签", "DroneTag", 0, 0, 100);
         }
 
-        public override void OnSave(XDataHolder data)
-        {
-            SaveMapperValues(data);
-        }
-        public override void OnLoad(XDataHolder data)
-        {
-            LoadMapperValues(data);
-            if (data.WasSimulationStarted) return;
-        }
-        protected override void BuildingUpdate()
+        public override void BuildingUpdate()
         {
             DroneTag.Value = (int)DroneTag.Value;
             //Debug.Log(GameObject.Find("frozen_knight_1").GetComponent<Renderer>().material.shader.name);
             //this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Instanced/Block Shader (GPUI off)");
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
-            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["FiaoCombinedMod/zDroneBump.png"].texture);
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", ModResource.GetTexture("FiaoCombinedMod/zDroneBump.png"));
 
 
             if (DroneAIType.Value == 0)
@@ -98,10 +88,10 @@ namespace FiaoCombinedMod
 
         }
 
-        protected override void OnSimulateFixedStart()
+        public override void OnSimulateStart()
         {
             this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Reflective/Bumped Specular");
-            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", resources["FiaoCombinedMod/zDroneBump.png"].texture);
+            this.transform.Find("Vis/Vis").GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", ModResource.GetTexture("zDroneBump.png"));
 
             if (DroneAIType.Value == 1)
             {
@@ -110,7 +100,7 @@ namespace FiaoCombinedMod
             }
             else
             {
-                foreach (DroneControlBlockBehavior DCBB in Machine.Active().SimulationMachine.GetComponentsInChildren<DroneControlBlockBehavior>())
+                foreach (DroneControlBlockBehavior DCBB in Machine.SimulationMachine.GetComponentsInChildren<DroneControlBlockBehavior>())
                 {
                     if (DCBB.DroneTag.Value == this.DroneTag.Value)
                     {
@@ -132,9 +122,9 @@ namespace FiaoCombinedMod
             Destroy(Shooter.GetComponentInChildren<CapsuleCollider>());
             CB = Shooter.GetComponent<CanonBlock>();
             CB.knockbackSpeed = 30;
-            CB.myRigidbody = rigidbody;
+            CB.Rigidbody = this.Rigidbody;
             Destroy(Shooter.GetComponent<Rigidbody>());
-            CB.Sliders[0].Value = 5;
+            ((List<MSlider>)(CB.Sliders))[0].Value = 5;
 
             MeshCollider MC = this.transform.GetComponentInChildren<MeshCollider>();
             MC.material.dynamicFriction = 0;
@@ -151,7 +141,7 @@ namespace FiaoCombinedMod
             DestroyImmediate(PositionIndicator.GetComponent<Rigidbody>());
             DestroyImmediate(PositionIndicator.GetComponent<Collider>());
         }
-        protected override void OnSimulateUpdate()
+        public override void SimulateUpdateAlways()
         {
             if (Shooter != null)
             {
@@ -160,7 +150,7 @@ namespace FiaoCombinedMod
             }
             if (DroneAIType.Value == 0 && MyControl == null)
             {
-                foreach (DroneControlBlockBehavior DCBB in Machine.Active().SimulationMachine.GetComponentsInChildren<DroneControlBlockBehavior>())
+                foreach (DroneControlBlockBehavior DCBB in Machine.SimulationMachine.GetComponentsInChildren<DroneControlBlockBehavior>())
                 {
                     if (DCBB.DroneTag.Value == this.DroneTag.Value)
                     {
@@ -171,7 +161,7 @@ namespace FiaoCombinedMod
                 }
             }
         }
-        protected override void OnSimulateFixedUpdate()
+        public override void SimulateFixedUpdateAlways()
         {
             ++FUcounter;
             if (HitPoints <= 0)
@@ -186,7 +176,7 @@ namespace FiaoCombinedMod
                     boom.GetComponent<ControllableBomb>().radius = 0;
                     boom.GetComponent<ControllableBomb>().randomDelay = 0;
                     boom.AddComponent<TimedSelfDestruct>();
-                    StartCoroutine(boom.GetComponent<ControllableBomb>().Explode());
+                    boom.GetComponent<ControllableBomb>().ExplodeMessage();
                 }
                 return;
             }
@@ -282,7 +272,7 @@ namespace FiaoCombinedMod
 
             SphereSize = Mathf.Max(15, rigidBody.velocity.magnitude);
         }
-        protected override void OnSimulateExit()
+        public override void OnSimulateStop()
         {
             Destroy(IncomingDetection);
             Destroy(PositionIndicator);
@@ -334,7 +324,8 @@ namespace FiaoCombinedMod
                     if (FUcounter % 30 == 0 && Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) < 15)
                     {
                         CB.Shoot();
-                        CB.alreadyShot = false;
+                        int i = 1;
+                        CB.OnReloadAmmo(ref i, AmmoType.Cannon, true, false);
                         //if (DroneAIType.Value == 1)
                         //{
                         if (!NotEvenHavingAJoint)
@@ -396,10 +387,10 @@ namespace FiaoCombinedMod
             }
             if (this.rigidBody.velocity.sqrMagnitude <= 5 * 5 * 58 * 58)
             {
-                rigidbody.AddRelativeForce(
+                Rigidbody.AddRelativeForce(
                 Vector3.forward * Mathf.Min(
                     38,
-                    (180 - Math.Abs(Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1))) * 38 / 180) * this.rigidbody.mass
+                    (180 - Math.Abs(Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1))) * 38 / 180) * this.Rigidbody.mass
                     );//Need calculate size
             }
         }
@@ -465,7 +456,9 @@ namespace FiaoCombinedMod
                         )
                     {
                         CB.Shoot();
-                        CB.alreadyShot = false;
+                        //CB.alreadyShot = false;
+                        int i = 1;
+                        CB.OnReloadAmmo(ref i, AmmoType.Cannon, true, false);
                     }
                 }
             }
@@ -535,26 +528,26 @@ namespace FiaoCombinedMod
             }
             if (this.rigidBody.velocity.sqrMagnitude <= 5 * 5 * 58 * 58)
             {
-                rigidbody.AddRelativeForce(
+                Rigidbody.AddRelativeForce(
                             Vector3.forward * Mathf.Min(
                                 38,
                                 MinThings
-                                ) * this.rigidbody.mass * OrbitVeloMultiplier
+                                ) * this.Rigidbody.mass * OrbitVeloMultiplier
                                 );//Need calculate size
             }
         }
 
         void TargetSelector()
         {
-            List<MachineTrackerMyId> BBList = new List<MachineTrackerMyId>();
+            List<MyBlockInfo> BBList = new List<MyBlockInfo>();
             List<int> ImportanceMultiplier = new List<int>();
             if (DroneAIType.Value == 1)
             {
 
-                foreach (MachineTrackerMyId BB in FindObjectsOfType<MachineTrackerMyId>())
+                foreach (MyBlockInfo BB in FindObjectsOfType<MyBlockInfo>())
                 {
                     NotEvenHavingAFireTag = BB.gameObject.GetComponent<FireTag>() == null;
-                    int BBID = BB.myId;
+                    int BBID = BB.gameObject.GetComponent<BlockVisualController>().ID;
                     switch (AIDifficultyValue)
                     {
                         case 0:
@@ -671,7 +664,7 @@ namespace FiaoCombinedMod
                             return;
                     }
                 }
-                foreach (MachineTrackerMyId BB2 in BBList.ToArray())
+                foreach (MyBlockInfo BB2 in BBList.ToArray())
                 {
                     bool IgnoreAttitude = false;
                     bool IgnoreDistance = false;
@@ -722,7 +715,7 @@ namespace FiaoCombinedMod
                 }
                 else
                 {
-                    foreach (MachineTrackerMyId BNB in BBList)
+                    foreach (MyBlockInfo BNB in BBList)
                     {
                         int Index = BBList.IndexOf(BNB);
                         if (ImportanceMultiplier.Count == Index + 1)

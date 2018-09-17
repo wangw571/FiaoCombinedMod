@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FiaoCombinedMod
 {
@@ -68,12 +64,10 @@ namespace FiaoCombinedMod
             {
                 MeshRenderer mr = gameObject.AddComponent<MeshRenderer>();
                 gameObject.AddComponent<MeshFilter>();
-                //Debug.Log(mr);
                 mr.material = new Material(Shader.Find("Particles/Additive"));
                 renderer = gameObject.GetComponent<Renderer>();
             }
-            //MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
-            //mr.material = material;
+            Camera.main.useOcclusionCulling = false;
 
         }
 

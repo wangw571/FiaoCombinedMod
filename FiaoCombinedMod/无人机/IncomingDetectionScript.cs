@@ -1,8 +1,6 @@
-﻿using System;
-using spaar.ModLoader;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
+using Modding;
 
 namespace FiaoCombinedMod
 {
@@ -30,7 +28,7 @@ namespace FiaoCombinedMod
         {
             DebugShowingLines();
 
-            if (!StatMaster.isSimulating)
+            if (!Game.IsSimulating)
             {
                 Destroy(this.gameObject);
             }
@@ -54,7 +52,7 @@ namespace FiaoCombinedMod
             MainMain.IncomingVectors = IncomingPositions.ToArray();
             IncomingPositions.Clear();
 
-            if (!StatMaster.isSimulating)
+            if (!Game.IsSimulating)
             {
                 Destroy(this.gameObject);
             }
