@@ -25,7 +25,6 @@ namespace FiaoCombinedMod
         protected Vector3 CorrTorq;
         public int iterativeCount = 0;
         public float LockingTimer = -1;
-        public bool IsInMovieMode = false;
         protected bool NoSign = false;
         protected float 转速乘子 = /*5*/25;
         public float 炮弹速度;
@@ -38,7 +37,6 @@ namespace FiaoCombinedMod
         protected float FireProg = 0;
 
         protected float 累计质量;
-        public bool IsOverLoaded = false;
 
         protected void InitExplosiveInstance()
         {
@@ -603,21 +601,6 @@ namespace FiaoCombinedMod
             BlockScript[] blockzz = (BlockScript[])(FindObjectsOfType(typeof(BlockScript))).Where(poof => pps.LockerRect.Contains(Camera.main.WorldToScreenPoint(((BlockScript)poof).VisualController.Block.SimBlock.transform.position)));
 
         }
-
-        //protected void CheckIfAvailablePilotPanelExists(bool IS) 
-        //{
-        //    UseLockingWindow.IsActive = false;
-        //    if (!IS) return;
-        //    foreach (PilotPanelScript PPS in Machine.BuildingMachine.GetComponentsInChildren<PilotPanelScript>())
-        //    {
-        //        if (PPS.UseLockWindow.IsActive)
-        //        {
-        //            UseLockingWindow.IsActive = true;
-        //            return;
-        //        }
-        //    }
-        //}
-
     }
     public class TrackingComputer : BasicTrackingComputerBehavior
     {
@@ -657,7 +640,6 @@ namespace FiaoCombinedMod
         public float 目标前帧速度Mag = 0;
 
         public int MissileGuidanceModeInt;
-        //public float MaxAcceleration = 0;
 
         public override void SafeAwake()
         {
@@ -879,12 +861,6 @@ namespace FiaoCombinedMod
 
         private void SimulateUpdateNotClient()
         {
-            if (IsOverLoaded) return;
-
-            /*IsInMovieMode = LocalMovieMode.Value;*/
-            IsInMovieMode = false;/*spaar.ModLoader.Configuration.GetBool("MovieMode", false);*/
-
-            //Trail.GetComponent<TrailRenderer>().material.color = Color.white;
             if (Key1.IsPressed && !HasBurnedOut)
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -929,11 +905,7 @@ namespace FiaoCombinedMod
                     {
                         ++cnnJointCount;
                         cb = Jo.GetComponentInParent<CanonBlock>();
-                        if (!IsOverLoaded)
-                        {
-                            cb.knockbackSpeed = 4250;
-                        }
-                        else { cb.knockbackSpeed = 8000; }
+                        cb.knockbackSpeed = 4250;
                     }
                     if (cnnJointCount == 1)
                     {
@@ -960,27 +932,14 @@ namespace FiaoCombinedMod
                     }
 
                     //LockingTimer = spaar.ModLoader.Configuration.GetFloat("LockingTimer", 4);
-                    LockingTimer = 0;
-                    if (!IsInMovieMode)
-                    {
-                        if (currentLocking.GetComponentInParent<MyBlockInfo>() || this.name.Contains(("IsCloaked")))
-                        {
-                            if (currentLocking.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
-                            {
-                                currentLocking = null;
-                                LockingTimer = -1;
-                            }
-                        }
-                    }
+                    LockingTimer = 0;                    
                 }
             }
         }
 
         public override void SimulateUpdateClient()
         {
-            if (IsOverLoaded) return;
             if (Machine.Player != Player.GetLocalPlayer()) return;
-            IsInMovieMode = false;/*spaar.ModLoader.Configuration.GetBool("MovieMode", false);*/
             if (Key1.IsPressed && !HasBurnedOut)
             {
 
@@ -1018,38 +977,10 @@ namespace FiaoCombinedMod
 
         public override void SimulateFixedUpdateAlways()
         {
-            if (IsOverLoaded || StatMaster.isClient) return;
+            if (StatMaster.isClient) return;
             LockingTimer -= Time.deltaTime;
-            IsInMovieMode = IsInMovieMode || 模式.Value == 2;
+            bool CameraMode = 模式.Value == 2;
             if (HasBurnedOut && !StatMaster.GodTools.UnbreakableMode) return;
-            if (currentLocking != null)
-                if (!IsInMovieMode)
-                {
-                    if (currentLocking.GetComponentInParent<MyBlockInfo>())
-                    {
-                        if (currentLocking.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
-                        {
-                            currentLocking = null;
-                            LockingTimer = -1;
-                        }
-                    }
-                    else if (currentLocking.gameObject.name == "FieldDetector")
-                    {
-                        foreach (Transform block in Machine.SimulationMachine)
-                        {
-                            if (block.name.Contains("Improved") && (block.position - currentLocking.transform.position).sqrMagnitude < 1)
-                            {
-                                currentLocking = block.gameObject;
-                                break;
-                            }
-                            else
-                            {
-                                currentLocking = null;
-                                LockingTimer = -1;
-                            }
-                        }
-                    }
-                }
             累计质量 = this.Rigidbody.mass;
 
             if (VisualController?.Block?.jointsToMe != null)
@@ -1063,36 +994,11 @@ namespace FiaoCombinedMod
                     }
                 }
             }
-
-            if (!IsInMovieMode)
-            {
-                if (!IsOverLoaded)
-                {
-                    bool aha;
-                    aha = ((前一帧速度 - this.Rigidbody.velocity).sqrMagnitude >= 12500f && 模式.Value == 0) || (模式.Value == 1 && (前一帧速度 - this.Rigidbody.velocity).sqrMagnitude >= 1000f);
-                    if (aha && !StatMaster.GodTools.UnbreakableMode)
-                    {
-                        OverLoadExplosion();
-                        this.GetComponent<FireTag>().Ignite();
-                        IsOverLoaded = true;
-                    }
-                    /*else
-                    {
-                        MaxAcceleration = Math.Max(MaxAcceleration, (前一帧速度 - this.Rigidbody.velocity).sqrMagnitude);
-                        Debug.Log(MaxAcceleration);
-                    }*/
-                }
-                else
-                {
-                    BesiegeConsoleController.ShowMessage("Overloaded! Tracking Computer CPU Damaged!");
-                    //Destroy(GetComponent<TrackingComputer>());
-                }
-            }
-            if (模式.Value == 0 && !IsOverLoaded)
+            if (模式.Value == 0)
             {
                 TurretTrackingComputerMode();
             }
-            else if (模式.Value == 1 && !IsOverLoaded)
+            else if (模式.Value == 1)
             {
                 MissileGuidanceComputerMode();
             }
@@ -1279,7 +1185,7 @@ namespace FiaoCombinedMod
                     //LocalTargetDirection = new Vector3(LocalTargetDirection.x, LocalTargetDirection.y - this.transform.position.y, LocalTargetDirection.z);
                     //float mag = (LocalTargetDirection.normalized - transform.forward.normalized).magnitude;
                     Vector3 TargetDirection = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, Rigidbody, 0.01f * size / MissileTorqueSlider.Value) * Mathf.Rad2Deg).normalized;
-                    if ((Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) < 105 && !IsInMovieMode) || MissileGuidanceMode.Value != 0 || MissileGuidanceMode.Value != 1)
+                    if ((Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) < 105 && 模式.Value != 2) || MissileGuidanceMode.Value != 0 || MissileGuidanceMode.Value != 1)
                     {
                         GetComponent<Rigidbody>().angularVelocity = (TargetDirection * RotatingSpeed * MissileTorqueSlider.Value);
                     }

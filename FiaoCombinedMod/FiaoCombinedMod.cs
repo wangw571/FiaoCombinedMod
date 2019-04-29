@@ -126,8 +126,6 @@ namespace FiaoCombinedMod
                 Block block = (Block)message8.GetData(0);
                 // The script on cloak block in client
                 BasicTrackingComputerBehavior clk = block.SimBlock.GameObject.GetComponent<BasicTrackingComputerBehavior>();
-                // Use the initialization
-                clk.IsOverLoaded = true;
             };
         }
 

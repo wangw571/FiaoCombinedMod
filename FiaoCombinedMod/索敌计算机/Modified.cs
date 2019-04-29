@@ -28,7 +28,7 @@ namespace FiaoCombinedMod
         protected MToggle 不聪明模式;
         protected MToggle DisableHTracking;
         protected MToggle DisableVTracking;
-        protected MSlider KnockBackBonusAdjuster;
+        protected MSlider KnockBackStablizierAdjuster;
         protected MToggle LockConnectionWhenNoTarget;
 
         private List<Guid> FriendlyBlockGUID;
@@ -50,8 +50,7 @@ namespace FiaoCombinedMod
         {
 
             //LocalMovieMode = FiaoCombinedMod.MovieMode;
-            IsInMovieMode = /*LocalMovieMode.Value;*/ false;
-            Init init = /*Configuration.GetBool("UseChinese", false)*/ false ? new Init(ChineseInitialize) : new Init(EnglishInitialize);
+            Init init = new Init(EnglishInitialize);
             init();
 
             //if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
@@ -118,7 +117,7 @@ namespace FiaoCombinedMod
             //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
             DisableVTracking = AddToggle("关闭垂直方向的计算", "DVT", false);
 
-            KnockBackBonusAdjuster = AddSlider("后坐力/过载 调整", "ADJ", 95, 0, 95);
+            KnockBackStablizierAdjuster = AddSlider("后坐力/过载 调整", "ADJ", 95, 0, 95);
 
             LockConnectionWhenNoTarget = AddToggle("当没有目标时\n锁定连接点", "LOCKConnection", false);
 
@@ -130,15 +129,15 @@ namespace FiaoCombinedMod
                                  "Locked",           //名字
                                  KeyCode.T);       //默认按键
 
-            Key2 = AddKey("Release Lo   ck", //按键信息2
+            Key2 = AddKey("Release Lock", //按键信息2
                                  "RLocked",           //名字
                                  KeyCode.Slash);       //默认按键
 
-            Key25 = AddKey("Next Target", //按键信息2
+            Key25 = AddKey("Switch to Next Target", //按键信息2
                                 "NTar",           //名字
                                 KeyCode.Slash);       //默认按键
 
-            炮力 = AddSlider("Cannon Slider",       //滑条信息
+            炮力 = AddSlider("Cannon Power Slider",       //滑条信息
                                     "strength",       //名字
                                     1f,            //默认值
                                     0f,          //最小值
@@ -150,7 +149,7 @@ namespace FiaoCombinedMod
                                     0.01f,          //最小值
                                     20f);           //最大值
 
-            计算间隔 = AddSlider("Calculation per second",       //滑条信息
+            计算间隔 = AddSlider("Calculations per second",       //滑条信息
                                     "CalculationPerSecond",       //名字
                                     100f,            //默认值
                                     0.01f,          //最小值
@@ -162,11 +161,11 @@ namespace FiaoCombinedMod
                                     0.01f,          //最小值
                                     1f);           //最大值
 
-            镜头哪里 = AddSlider("Distance From Camera", "Dist", 1500, 1, 900000);
+            镜头哪里 = AddSlider("Calibration Distance From Camera", "Dist", 1500, 1, 900000);
 
             自动索敌 = AddToggle("Auto Lock", "USE", false);
             自动索敌.DisplayInMapper = false;
-            自动索敌友方范围 = AddSlider("Friendly Blocks", "FriendDist", 10, 0, 500);
+            自动索敌友方范围 = AddSlider("Friendly Blocks Range", "FriendDist", 10, 0, 500);
             模式 = AddMenu("Menu", 0, new List<string> { "Lock Mode", "Mouse Mode" });
             //模式 = AddMenu("Menu", 0, new List<string> { "Lock Mode"});
 
@@ -174,14 +173,14 @@ namespace FiaoCombinedMod
                                        "NoCL",       //名字
                                        false);             //默认状态
 
-            FireOnMouseClick = AddToggle("Fire On Click", "FOC", true);
+            FireOnMouseClick = AddToggle("Fire On Mouse Click", "FOC", true);
 
             //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
             DisableVTracking = AddToggle("Disable Vertical Tracking", "DVT", false);
 
-            KnockBackBonusAdjuster = AddSlider("Knockback/Rotate Adjuster", "ADJ", 95, 0, 95);
+            KnockBackStablizierAdjuster = AddSlider("Knockback/Rotate Damper Effecitvity", "ADJ", 95, 0, 95);
 
-            LockConnectionWhenNoTarget = AddToggle("Lock the connection\nwhen having no target", "LOCKConnection", false);
+            LockConnectionWhenNoTarget = AddToggle("Lock the joint\nwhen having no target", "LOCKConnection", false);
 
             //UseLockingWindow = AddToggle("Enable Autolock window", "LockWindow", false);
         }
@@ -189,14 +188,6 @@ namespace FiaoCombinedMod
         public override void BuildingUpdate()
         {
             if (LockConnectionWhenNoTarget == null) return;
-            //UseLockingWindow.DisplayInMapper = Machine.BuildingMachine.GetComponentInChildren<PilotPanelScript>() && 模式.Value != 1;
-
-            //if (!spaar.ModLoader.Configuration.DoesKeyExist("MovieMode"))
-            //{
-            //    spaar.ModLoader.Configuration.SetBool("MovieMode", false);
-            //    spaar.ModLoader.Configuration.Save();
-            //}
-            IsInMovieMode = /*spaar.ModLoader.Configuration.GetBool("MovieMode", false); IsInMovieMode = LocalMovieMode.Value;*/false;
             自动索敌.DisplayInMapper = 模式.Value == 0;
 
             Key1.DisplayInMapper = 模式.Value != 1 && !自动索敌.IsActive;
@@ -207,7 +198,7 @@ namespace FiaoCombinedMod
             {
                 自动索敌.IsActive = false;
             }
-            KnockBackBonusAdjuster.Value = Mathf.Clamp(KnockBackBonusAdjuster.Value, 0, 95);
+            KnockBackStablizierAdjuster.Value = Mathf.Clamp(KnockBackStablizierAdjuster.Value, 0, 95);
 
             警戒度.DisplayInMapper = 自动索敌.IsActive && 模式.Value == 0;
             自动索敌友方范围.DisplayInMapper = 自动索敌.IsActive && 模式.Value == 0;
@@ -304,30 +295,7 @@ namespace FiaoCombinedMod
 
         public override void SimulateUpdateAlways()
         {
-            IsInMovieMode =/* LocalMovieMode.Value;*/ false;
-            if (IsOverLoaded || StatMaster.isClient) return;
-
-            //var conf = this.GetComponent<ConfigurableJoint>();
-            //if (Input.GetKey(KeyCode.Z))
-            //{
-            //    conf.angularXDrive = new JointDrive();
-            //    conf.angularXMotion = ConfigurableJointMotion.Locked;
-            //    conf.angularYMotion = ConfigurableJointMotion.Free;
-            //    conf.angularZMotion = ConfigurableJointMotion.Free;
-            //}
-            //else if (Input.GetKey(KeyCode.X))
-            //{
-            //    conf.angularXMotion = ConfigurableJointMotion.Free;
-            //    conf.angularYMotion = ConfigurableJointMotion.Locked;
-            //    conf.angularZMotion = ConfigurableJointMotion.Free;
-            //}
-            //else if (Input.GetKey(KeyCode.C))
-            //{
-            //    conf.angularXMotion = ConfigurableJointMotion.Free;
-            //    conf.angularYMotion = ConfigurableJointMotion.Free;
-            //    conf.angularZMotion = ConfigurableJointMotion.Locked;
-            //}
-            //下个目标
+            if (StatMaster.isClient) return;
             if (Key25.IsPressed && 自动索敌.IsActive)
             {
                 currentLocking = MyTargetSelector();
@@ -376,12 +344,8 @@ namespace FiaoCombinedMod
                 if (Jo.GetComponentInParent<CanonBlock>())
                 {
                     CanonBlock cb = Jo.GetComponentInParent<CanonBlock>();
-                    if (!IsOverLoaded)
-                    {
-                        cb.knockbackSpeed = 8000 * ((100 - KnockBackBonusAdjuster.Value) / 100);
-                        cb.randomDelay = 0.000001f;
-                    }
-                    else { cb.knockbackSpeed = 8000; }
+                    cb.knockbackSpeed = 8000 * ((100 - KnockBackStablizierAdjuster.Value) / 100);
+                    cb.randomDelay = 0.000001f;
                     shoott = StatMaster.isMP ? shoott : Input.GetMouseButtonDown(0);
                     if (FireOnMouseClick.IsActive && 模式.Value == 1 && shoott) { cb.Shoot(); }
                 }
@@ -432,7 +396,7 @@ namespace FiaoCombinedMod
 
         public override void SimulateFixedUpdateAlways()
         {
-            if (IsOverLoaded || StatMaster.isClient) return;
+            if (StatMaster.isClient) return;
 
             LockingTimer -= Time.deltaTime * 3;
             size = 1 * this.transform.localScale.x * this.transform.localScale.y * this.transform.localScale.z;
@@ -440,32 +404,6 @@ namespace FiaoCombinedMod
             FireProg = this.IsBurning ? FireProg + 0.01f : FireProg;
             if (currentLocking != null)
             {
-                if (!IsInMovieMode)
-                {
-                    if (currentLocking.GetComponentInParent<MyBlockInfo>())
-                    {
-                        if (currentLocking.GetComponentInParent<MyBlockInfo>().gameObject.name.Contains("IsCloaked") || this.name.Contains(("IsCloaked")))
-                            currentLocking = null;
-                        LockingTimer = -1;
-                    }
-                    else if (currentLocking.gameObject.name == "FieldDetector")
-                    {
-                        foreach (Transform block in Machine.SimulationMachine)
-                        {
-                            if (block.name.Contains("Improved") && (block.position - currentLocking.transform.position).sqrMagnitude < 1)
-                            {
-                                currentLocking = block.gameObject;
-                                break;
-                            }
-                            else
-                            {
-                                currentLocking = null;
-                                LockingTimer = -1;
-                            }
-                        }
-                    }
-                }
-
                 if (LockConnectionWhenNoTarget.IsActive)
                 {
                     this.GetComponent<ConfigurableJoint>().angularXMotion = ConfigurableJointMotion.Free;
@@ -478,65 +416,23 @@ namespace FiaoCombinedMod
                 this.GetComponent<ConfigurableJoint>().angularYMotion = ConfigurableJointMotion.Locked;
             }
 
-            if (!IsInMovieMode)
+            记录器 += (计算间隔.Value / 100) * (1 - FireProg);
+            if (currentTarget != null && 模式.Value != 1)
             {
-                if (!HasBurnedOut || StatMaster.GodTools.UnbreakableMode)
+                if (currentTarget.GetComponent<Rigidbody>())
                 {
-                    记录器 += (计算间隔.Value / 100) * (1 - FireProg);
-                    if (currentTarget != null && 模式.Value != 1)
-                    {
-                        if (currentTarget.GetComponent<Rigidbody>())
-                        {
-                            NonMouseMode(FireProg);
-                        }
-                    }
-                    else if (自动索敌.IsActive && 自动索敌.DisplayInMapper)
-                    {
-                        Auto(0);
-                    }
-                    else if (模式.Value == 1 && !HasBurnedOut)
-                    {
-                        MouseMode(FireProg);
-                    }
+                    NonMouseMode(0);
                 }
-
-                if (!IsOverLoaded && !StatMaster.GodTools.UnbreakableMode)
-                {
-                    IsOverLoaded =
-                        (/*(前一帧速度 - this.GetComponent<Rigidbody>().velocity).sqrMagnitude >= 4f && 模式.Value == 0 && !IHaveConnectedWithCannons)
-                        ||*/
-                        (前一帧速度 - this.Rigidbody.velocity).sqrMagnitude >= 12500f * (Mathf.Log(97 - KnockBackBonusAdjuster.Value, 2)) && 模式.Value == 0)
-                        ;
-                    if (IsOverLoaded)
-                    {
-                        OverLoadExplosion();
-                        this.GetComponent<FireTag>().Ignite();
-                        p.l("Modified Tracking Computer Overloaded!");
-                    }
-                }
-                else
-                    前一帧速度 = this.GetComponent<Rigidbody>().velocity;
             }
-            else
+            else if (自动索敌.IsActive && 自动索敌.DisplayInMapper)
             {
-                记录器 += (计算间隔.Value / 100) * (1 - FireProg);
-                if (currentTarget != null && 模式.Value != 1)
-                {
-                    if (currentTarget.GetComponent<Rigidbody>())
-                    {
-                        NonMouseMode(0);
-                    }
-                }
-                else if (自动索敌.IsActive && 自动索敌.DisplayInMapper)
-                {
-                    Auto(0);
-                }
-                else if (模式.Value == 1 && !HasBurnedOut)
-                {
-                    MouseMode(0);
-                }
-
+                Auto(0);
             }
+            else if (模式.Value == 1 && !HasBurnedOut)
+            {
+                MouseMode(0);
+            }
+
             累计质量 = this.Rigidbody.mass;
 
             if (VisualController == null) return;
@@ -637,7 +533,7 @@ namespace FiaoCombinedMod
 
         private void ApplyAngularVelo()
         {
-            float 后坐力替换转速 = (1 - (KnockBackBonusAdjuster.Value / 95));
+            float 后坐力替换转速 = (1 - (KnockBackStablizierAdjuster.Value / 95));
             this.Rigidbody.angularVelocity = (
                 MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
                 * RotatingSpeed * (累计质量 / this.Rigidbody.mass) * (1 + 后坐力替换转速 * 5));

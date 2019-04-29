@@ -124,7 +124,7 @@ namespace FiaoCombinedMod
             // Setup config window
             LaserEditModeMenu = AddMenu("laserEditMode", 0, new List<string>() { "Ability", "Misc." });
             //LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Freeze", "Explosive", "Just Visual Effect" });
-            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "N/A", "Explosive", "Just Visual Effect" });
+            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Not Available", "Explosive(N/A in MP)", "Visual Effects Only" });
 
             LaserColourSlider = AddColourSlider("Beam Colour", "laserColour", Color.red, true);
 
@@ -133,7 +133,7 @@ namespace FiaoCombinedMod
             LaserSafetyRange = AddSlider("Safety Length", "laserSafeLength", 1f, 0.1f, 1500);
 
             //LaserKineticUpDownSlider = AddSlider("Up/Down Force", "laserKinUpDown", 1f, -2.5f, 2.5f);
-            LaserKineticInOutSlider = AddSlider("In/Out Force", "laserKinInOut", 0f, -2.5f, 2.5f);
+            LaserKineticInOutSlider = AddSlider("Force", "laserKinInOut", 0f, -2.5f, 2.5f);
             //LaserKineticSideSlider = AddSlider("Sideways Force", "laserKinSide", 0f, -2.5f, 2.5f);
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
@@ -159,8 +159,8 @@ namespace FiaoCombinedMod
 
             HoldingToEmit = AddToggle("Only emit laser when holding", "HoldOnly", false);
 
-            UseLegacy = AddToggle("Use Legacy Rending", "Legacy", false);
-            UseNotTrans = AddToggle("Use Non-trans shader", "NonTran", false);
+            UseLegacy = AddToggle("Use Legacy Rending", "Legacy", true);
+            UseNotTrans = AddToggle("Nontransparent", "NonTran", false);
 
             // register mode switching functions with menu delegates
             LaserAbilityModeMenu.ValueChanged += CycleAbilityMode;
