@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace FiaoCombinedMod
 {
-    public abstract class BasicTrackingComputerBehavior : Modding.BlockScript
+    public abstract class BasicTrackingComputerBehavior : BlockScript
     {
         protected Modding.Blocks.Block ExplosiveInstance;
         protected GameObject currentTarget;
@@ -597,7 +597,7 @@ namespace FiaoCombinedMod
         public void SettleTargets()
         {
             PilotPanelScript pps = Messages.PPdic[Machine.Player];
-            if (pps == null || pps.gameObject.active == false) return;
+            if (pps == null || pps.gameObject.activeSelf == false) return;
             BlockScript[] blockzz = (BlockScript[])(FindObjectsOfType(typeof(BlockScript))).Where(poof => pps.LockerRect.Contains(Camera.main.WorldToScreenPoint(((BlockScript)poof).VisualController.Block.SimBlock.transform.position)));
 
         }

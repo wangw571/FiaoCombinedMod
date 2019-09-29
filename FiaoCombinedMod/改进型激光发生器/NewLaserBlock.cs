@@ -8,6 +8,7 @@ namespace FiaoCombinedMod
 {
     public class NewLaserBlock : Modding.BlockScript
     {
+        public bool cubed = false;
         // Besiege-specific stuff
         protected MMenu LaserEditModeMenu;
         protected MMenu LaserAbilityModeMenu;
@@ -124,7 +125,7 @@ namespace FiaoCombinedMod
             // Setup config window
             LaserEditModeMenu = AddMenu("laserEditMode", 0, new List<string>() { "Ability", "Misc." });
             //LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Freeze", "Explosive", "Just Visual Effect" });
-            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Not Available", "Explosive(N/A in MP)", "Visual Effects Only" });
+            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Igniting", "Apply Force", "Not Available, don't select", "Explode(N/A in MP)", "Visual Effects Only" });
 
             LaserColourSlider = AddColourSlider("Beam Colour", "laserColour", Color.red, true);
 
@@ -137,9 +138,9 @@ namespace FiaoCombinedMod
             //LaserKineticSideSlider = AddSlider("Sideways Force", "laserKinSide", 0f, -2.5f, 2.5f);
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
-            LaserOnOffToggle = AddToggle("Start On", "laserOnOffToggle", true);
-            LightOptionToggle = AddToggle("Always Provide Light", "LightProbeToggle", false);
-            LaserOnOffKey = AddKey("On/Off", "laserOnOffKey", KeyCode.Y);
+            LaserOnOffToggle = AddToggle("Online w/ Sim", "laserOnOffToggle", true);
+            LightOptionToggle = AddToggle("Always Illuminate", "LightProbeToggle", false);
+            LaserOnOffKey = AddKey("Toggle", "laserOnOffKey", KeyCode.Y);
 
             LaserWidth = AddSlider("Laser Width", "laserWidth", 0.5f, 0.001f, 10f);
 
@@ -152,10 +153,10 @@ namespace FiaoCombinedMod
 
 
             ShrinkEffectToggle = AddToggle("Use Charging Effect", "UseShrink", true);
-            InvertShrinking = AddToggle("Inverse Shrinking to Expanding", "InverseShrink", false);
-            ChargeHoldGasp = AddSlider("Charging Countdown", "CountDown", 2.3f, 0, 10f);
+            InvertShrinking = AddToggle("Inversed Charge Visual", "InverseShrink", false);
+            ChargeHoldGasp = AddSlider("Charge Duration", "CountDown", 2.3f, 0, 10f);
 
-            EffectParticleChargingPosition = AddMenu("ChargePosition", 0, new List<string> { "Both block and target", "Only Block have particles", "Only target have particles", "None" });
+            EffectParticleChargingPosition = AddMenu("ChargePosition", 0, new List<string> { "Particle on block and target", "Particle Only On Block", "Particle Only On target", "No Particle effect" });
 
             HoldingToEmit = AddToggle("Only emit laser when holding", "HoldOnly", false);
 
@@ -196,7 +197,11 @@ namespace FiaoCombinedMod
             EffectParticleChargingPosition.DisplayInMapper = LaserEditModeMenu.Value == 1 && LaserAbilityModeMenu.Value == 3 && ShrinkEffectToggle.IsActive;
             InvertShrinking.DisplayInMapper = LaserEditModeMenu.Value == 1 && ShrinkEffectToggle.IsActive;
 
-            ChargeHoldGasp.DisplayInMapper = ((LaserAbilityModeMenu.Value == 3 || LaserEditModeMenu.Value == 1) && ShrinkEffectToggle.IsActive);
+            ChargeHoldGasp.DisplayInMapper = ((LaserAbilityModeMenu.Value == 3 ^ LaserEditModeMenu.Value == 1) && ShrinkEffectToggle.IsActive);
+            if(ChargeHoldGasp.Value == 0)
+            {
+                ChargeHoldGasp.Value = 0.00001f;
+            }
 
         }
         private void HideEverything()
@@ -329,12 +334,12 @@ namespace FiaoCombinedMod
         {
             if (!StatMaster.isClient)
             {
-                laserAtOff = HoldingToEmit.IsActive ? !LaserOnOffKey.IsDown : laserAtOff;
+                laserAtOff = HoldingToEmit.IsActive ? !LaserOnOffKey.IsHeld : laserAtOff;
                 if (LaserOnOffKey.IsReleased)
                 {
                     laserAtOff = HoldingToEmit.IsActive ? true : !laserAtOff;
                 }
-                laserFX = EffectActivateKey.IsDown;
+                laserFX = EffectActivateKey.IsHeld;
             }
             UpdateThingy();
             if (StatMaster.isMP && !StatMaster.isClient)
@@ -381,12 +386,19 @@ namespace FiaoCombinedMod
                         Vector3 RandomPoint = EulerToDirection(UnityEngine.Random.Range(-360, 360), UnityEngine.Random.Range(-360, 360));
                         Multiplier = AlreadyCountDown / (ChargeHoldGasp.Value * 100);
                         SqrtMultiplier = Mathf.Sqrt(Multiplier);
-                        PS.Emit(
-                            Especially.transform.position + (RandomPoint * PS.startLifetime * 2 * Multiplier),
-                            -RandomPoint * 2 * Multiplier * Multiplier + laserBlockVelo,
-                            0.2f * Multiplier * Multiplier,
-                            PS.startLifetime * SqrtMultiplier,
-                            new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1));
+                        ParticleSystem.EmitParams eprams = new ParticleSystem.EmitParams();
+                        eprams.velocity = -RandomPoint * 2 * Multiplier * Multiplier + laserBlockVelo;
+                        eprams.position = Especially.transform.position + (RandomPoint * PS.startLifetime * 2 * Multiplier);
+                        eprams.startSize = 0.2f * Multiplier * Multiplier;
+                        eprams.startLifetime = PS.startLifetime * SqrtMultiplier;
+                        eprams.startColor = new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1);
+                        PS.Emit(eprams, 1);
+                        //    PS.Emit(
+                        //        Especially.transform.position + (RandomPoint * PS.startLifetime * 2 * Multiplier),
+                        //        -RandomPoint * 2 * Multiplier * Multiplier + laserBlockVelo,
+                        //        0.2f * Multiplier * Multiplier,
+                        //        PS.startLifetime * SqrtMultiplier,
+                        //        new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1));
                     }
                 }
                 else
@@ -424,6 +436,7 @@ namespace FiaoCombinedMod
         }
         private void doPassiveAbility()
         {
+            applyCubeShader();
             if (!BeamHitAnything) return;
             if (ShrinkEffectToggle.IsActive && (CountDown < ChargeHoldGasp.Value * 100)) return;
             foreach (RHInfo rHinfo in rHInfos)
@@ -433,16 +446,23 @@ namespace FiaoCombinedMod
                 {
                     continue;
                 }
-                if (ShrinkEffectToggle.IsActive && EffectParticleChargingPosition.Value != 1 && EffectParticleChargingPosition.Value != 3 && EffectActivateKey.IsDown)
+                if (ShrinkEffectToggle.IsActive && EffectParticleChargingPosition.Value != 1 && EffectParticleChargingPosition.Value != 3 && EffectActivateKey.IsHeld)
                 {
                     Vector3 POS = rH.point;
                     Vector3 RandomPoint = EulerToDirection(UnityEngine.Random.Range(-360, 360), UnityEngine.Random.Range(-360, 360));
-                    PS.Emit(
-                        POS + (RandomPoint * PS.startLifetime * 2 * Multiplier),
-                        (-RandomPoint * 2 * Multiplier * Multiplier),
-                        0.2f * Multiplier,
-                        PS.startLifetime * SqrtMultiplier,
-                        new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1));
+                    ParticleSystem.EmitParams eprams = new ParticleSystem.EmitParams();
+                    eprams.position = POS + (RandomPoint * PS.startLifetime * 2 * Multiplier);
+                    eprams.velocity = (-RandomPoint * 2 * Multiplier * Multiplier);
+                    eprams.startSize = 0.2f * Multiplier;
+                    eprams.startLifetime = PS.startLifetime * SqrtMultiplier;
+                    eprams.startColor = new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1);
+                    PS.Emit(eprams, 1);
+                    //PS.Emit(
+                    //    POS + (RandomPoint * PS.startLifetime * 2 * Multiplier),
+                    //    (-RandomPoint * 2 * Multiplier * Multiplier),
+                    //    0.2f * Multiplier,
+                    //    PS.startLifetime * SqrtMultiplier,
+                    //    new Color(PS.startColor.r, PS.startColor.g, PS.startColor.b, 1));
                 }
                 switch (LaserAbilityModeMenu.Value)
                 {
@@ -485,7 +505,7 @@ namespace FiaoCombinedMod
                     case 3: // bomb
                         if (ShrinkEffectToggle.IsActive)
                         {
-                            if (LaserAbilityModeMenu.Value == 3 && (CountDown < ChargeHoldGasp.Value * 100 || !EffectActivateKey.IsDown)) continue;
+                            if (LaserAbilityModeMenu.Value == 3 && (CountDown < ChargeHoldGasp.Value * 100 || !EffectActivateKey.IsHeld)) continue;
                         }
                         if (laserAtOff) continue;
                         //GamePrefabs.InstantiateExplosion(GamePrefabs.ExplosionType.Large, rH.point);
@@ -508,6 +528,32 @@ namespace FiaoCombinedMod
             if (ShrinkEffectToggle.IsActive && (CountDown < ChargeHoldGasp.Value * 100 || !laserFX)) return;
             CountDown = 0;
         }
+
+        private void applyCubeShader()
+        {
+            if(cubed == true) { return;  }
+            ModAssetBundle mab = ModResource.GetAssetBundle("CubedShader");
+            Material aaa = null;
+            foreach (string name in mab.AssetBundle.GetAllAssetNames())
+            {
+                aaa = mab.LoadAsset<Material>(name);
+                if(aaa != null) { break; }
+            }
+
+            cubed = true;
+            foreach (BlockBehaviour bb in FindObjectsOfType<BlockBehaviour>())
+            {
+                if(Vector3.SqrMagnitude(bb.transform.position - this.transform.position) < 10)
+                {
+                    BesiegeConsoleController.ShowMessage(bb.gameObject.name);
+                    foreach(Renderer red in bb.gameObject.GetComponentsInChildren<Renderer>())
+                    {
+                        red.material.shader = aaa.shader;
+                    }
+                }
+            }
+        }
+
         public void ReduceBreakForce(ConfigurableJoint Jointo)
         {
             if (Jointo && Jointo.breakForce == Mathf.Infinity)

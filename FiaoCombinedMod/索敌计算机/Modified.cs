@@ -30,6 +30,7 @@ namespace FiaoCombinedMod
         protected MToggle DisableVTracking;
         protected MSlider KnockBackStablizierAdjuster;
         protected MToggle LockConnectionWhenNoTarget;
+        protected MSlider TorqueMultiplier;
 
         private List<Guid> FriendlyBlockGUID;
 
@@ -46,7 +47,8 @@ namespace FiaoCombinedMod
 
         public Vector3 AimPos { get; private set; }
 
-        public override void SafeAwake()
+
+        public override void SafeAwake() 
         {
 
             //LocalMovieMode = FiaoCombinedMod.MovieMode;
@@ -62,67 +64,67 @@ namespace FiaoCombinedMod
 
             //UseLockingWindow.Toggled += CheckIfAvailablePilotPanelExists;
         }
-        void ChineseInitialize()
-        {
-            Key1 = AddKey("获取目标", //按键信息
-                                 "Locked",           //名字
-                                 KeyCode.T);       //默认按键
+        //void ChineseInitialize()
+        //{
+        //    Key1 = AddKey("获取目标", //按键信息
+        //                         "Locked",           //名字
+        //                         KeyCode.T);       //默认按键
 
-            Key2 = AddKey("解除锁定", //按键信息2
-                                 "RLocked",           //名字
-                                 KeyCode.Slash);       //默认按键
+        //    Key2 = AddKey("解除锁定", //按键信息2
+        //                         "RLocked",           //名字
+        //                         KeyCode.Slash);       //默认按键
 
-            Key25 = AddKey("下一目标", //按键信息2
-                                 "NTar",           //名字
-                                 KeyCode.Slash);       //默认按键
+        //    Key25 = AddKey("下一目标", //按键信息2
+        //                         "NTar",           //名字
+        //                         KeyCode.Slash);       //默认按键
 
-            炮力 = AddSlider("炮力",       //滑条信息
-                                    "strength",       //名字
-                                    1f,            //默认值
-                                    0f,          //最小值
-                                    2f);           //最大值
+        //    炮力 = AddSlider("炮力",       //滑条信息
+        //                            "strength",       //名字
+        //                            1f,            //默认值
+        //                            0f,          //最小值
+        //                            2f);           //最大值
 
-            精度 = AddSlider("精度",       //滑条信息
-                                    "Precision",       //名字
-                                    0.5f,            //默认值
-                                    0.01f,          //最小值
-                                    10f);           //最大值
+        //    精度 = AddSlider("精度",       //滑条信息
+        //                            "Precision",       //名字
+        //                            0.5f,            //默认值
+        //                            0.01f,          //最小值
+        //                            10f);           //最大值
 
-            计算间隔 = AddSlider("每秒计算频率",       //滑条信息 
-                                    "CalculationPerSecond",       //名字
-                                    100f,            //默认值
-                                    1f,          //最小值
-                                    100f);           //最大值
+        //    计算间隔 = AddSlider("每秒计算频率",       //滑条信息 
+        //                            "CalculationPerSecond",       //名字
+        //                            100f,            //默认值
+        //                            1f,          //最小值
+        //                            100f);           //最大值
 
-            警戒度 = AddSlider("自动索敌警戒度",       //滑条信息
-                                    "Aggressivity",       //名字
-                                    0.5f,            //默认值
-                                    0.01f,          //最小值
-                                    1f);           //最大值
+        //    警戒度 = AddSlider("自动索敌警戒度",       //滑条信息
+        //                            "Aggressivity",       //名字
+        //                            0.5f,            //默认值
+        //                            0.01f,          //最小值
+        //                            1f);           //最大值
 
-            镜头哪里 = AddSlider("距离相机的距离", "Dist", 1500, 1, 900000);
+        //    镜头哪里 = AddSlider("距离相机的距离", "Dist", 1500, 1, 900000);
 
-            自动索敌 = AddToggle("启用\n自动索敌\n功能", "USE", false);
+        //    自动索敌 = AddToggle("启用\n自动索敌\n功能", "USE", false);
 
-            自动索敌友方范围 = AddSlider("友方模块判定范围", "FriendDist", 10, 0, 500);
+        //    自动索敌友方范围 = AddSlider("友方模块判定范围", "FriendDist", 10, 0, 500);
 
-            模式 = AddMenu("Menu", 0, new List<string> { "锁定模式", "跟随鼠标模式" });
+        //    模式 = AddMenu("Menu", 0, new List<string> { "锁定模式", "跟随鼠标模式" });
 
-            不聪明模式 = AddToggle("不计算弹道",   //toggle信息
-                                       "NoCL",       //名字
-                                       false);             //默认状态
+        //    不聪明模式 = AddToggle("不计算弹道",   //toggle信息
+        //                               "NoCL",       //名字
+        //                               false);             //默认状态
 
-            FireOnMouseClick = AddToggle("在鼠标点击时开火", "FOC", true);
+        //    FireOnMouseClick = AddToggle("在鼠标点击时开火", "FOC", true);
 
-            //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
-            DisableVTracking = AddToggle("关闭垂直方向的计算", "DVT", false);
+        //    //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
+        //    DisableVTracking = AddToggle("关闭垂直方向的计算", "DVT", false);
 
-            KnockBackStablizierAdjuster = AddSlider("后坐力/过载 调整", "ADJ", 95, 0, 95);
+        //    KnockBackStablizierAdjuster = AddSlider("后坐力/过载 调整", "ADJ", 95, 0, 95);
 
-            LockConnectionWhenNoTarget = AddToggle("当没有目标时\n锁定连接点", "LOCKConnection", false);
+        //    LockConnectionWhenNoTarget = AddToggle("当没有目标时\n锁定连接点", "LOCKConnection", false);
 
-            UseLockingWindow = AddToggle("使用自动锁定窗口", "LockWindow", false);
-        }
+        //    UseLockingWindow = AddToggle("使用自动锁定窗口", "LockWindow", false);
+        //}
         void EnglishInitialize()
         {
             Key1 = AddKey("Lock On", //按键信息
@@ -178,9 +180,11 @@ namespace FiaoCombinedMod
             //DisableHTracking = AddToggle("Disable Horizontal Tracking", "DHT", false);
             DisableVTracking = AddToggle("Disable Vertical Tracking", "DVT", false);
 
-            KnockBackStablizierAdjuster = AddSlider("Knockback/Rotate Damper Effecitvity", "ADJ", 95, 0, 95);
+            KnockBackStablizierAdjuster = AddSlider("Knockback Damper Effecitvity", "ADJ", 95, 0, 95);
 
             LockConnectionWhenNoTarget = AddToggle("Lock the joint\nwhen having no target", "LOCKConnection", false);
+
+            TorqueMultiplier = AddSlider("Torque Multiplier", "torqMult", 1, 0.5f, 20f);
 
             //UseLockingWindow = AddToggle("Enable Autolock window", "LockWindow", false);
         }
@@ -198,8 +202,6 @@ namespace FiaoCombinedMod
             {
                 自动索敌.IsActive = false;
             }
-            KnockBackStablizierAdjuster.Value = Mathf.Clamp(KnockBackStablizierAdjuster.Value, 0, 95);
-
             警戒度.DisplayInMapper = 自动索敌.IsActive && 模式.Value == 0;
             自动索敌友方范围.DisplayInMapper = 自动索敌.IsActive && 模式.Value == 0;
 
@@ -213,6 +215,7 @@ namespace FiaoCombinedMod
 
             //自动索敌.DisplayInMapper = false;
         }
+
         public override void OnSimulateStart()
         {
             currentTarget = null;
@@ -402,7 +405,7 @@ namespace FiaoCombinedMod
             size = 1 * this.transform.localScale.x * this.transform.localScale.y * this.transform.localScale.z;
             Rigidbody.mass = 2f * size;
             FireProg = this.IsBurning ? FireProg + 0.01f : FireProg;
-            if (currentLocking != null)
+            if (currentLocking != null) 
             {
                 if (LockConnectionWhenNoTarget.IsActive)
                 {
@@ -534,7 +537,8 @@ namespace FiaoCombinedMod
         private void ApplyAngularVelo()
         {
             float 后坐力替换转速 = (1 - (KnockBackStablizierAdjuster.Value / 95));
-            this.Rigidbody.angularVelocity = (
+            //Try MoveRotation
+            this.Rigidbody.angularVelocity = TorqueMultiplier.Value * (
                 MultiplyXAndZ(CorrTorq.normalized, 转速乘子)
                 * RotatingSpeed * (累计质量 / this.Rigidbody.mass) * (1 + 后坐力替换转速 * 5));
         }
@@ -666,7 +670,7 @@ namespace FiaoCombinedMod
 
                     TargetDirection = (getCorrTorque(this.transform.forward, LocalTargetDirection - this.transform.position * 1, this.GetComponent<Rigidbody>(), 0.01f * size) * Mathf.Rad2Deg).normalized;
 
-                    GetComponent<Rigidbody>().angularVelocity = (TargetDirection * RotatingSpeed);
+                    GetComponent<Rigidbody>().angularVelocity = (TargetDirection * RotatingSpeed * TorqueMultiplier.Value);
 
                     if (FUCounter % 30 == 0 && Vector3.Angle(transform.forward, LocalTargetDirection - this.transform.position * 1) < 15)
                     {

@@ -19,7 +19,7 @@ namespace FiaoCombinedMod
         private MSlider LockerHeight, LockerWidth;
         private MColourSlider StartColour, EndColour;
         private MKey ActiveHUD;
-        private MKey HidePanel;
+        private MKey HidePanel; 
 
         private MToggle ReduceCameraShake;
 
