@@ -94,10 +94,15 @@ namespace FiaoCombinedMod
             ModNetworking.Callbacks[Messages.TrackingComputerSync] += message7 =>
             {
                 Block block = (Block)message7.GetData(0);
+                if (block != null && block.SimBlock != null) { 
                 // The script on cloak block in client
-                BasicTrackingComputerBehavior clk = block.SimBlock.GameObject.GetComponent<BasicTrackingComputerBehavior>();
+                    BasicTrackingComputerBehavior clk = block.SimBlock.GameObject.GetComponent<BasicTrackingComputerBehavior>();
                 // Use the initialization
-                clk.setSign((bool)message7.GetData(2), (Vector3)message7.GetData(1));
+                    if (clk != null)
+                    {
+                        clk.setSign((bool)message7.GetData(2), (Vector3)message7.GetData(1));
+                    }
+                }
             };
 
             Messages.ModTrackingComputerShot = ModNetworking.CreateMessageType(DataType.Block);
@@ -143,18 +148,25 @@ namespace FiaoCombinedMod
                 float length = (float)message2.GetData(3);
                 bool hit = (bool)message2.GetData(4);
                 Vector3 velo = (Vector3)message2.GetData(5);
-                NewLaserBlock clk = block.SimBlock.GameObject.GetComponent<NewLaserBlock>();
+                if (block != null && block.SimBlock != null) { 
+                    NewLaserBlock clk = block.SimBlock.GameObject.GetComponent<NewLaserBlock>();
+                    if (clk != null)
+                        clk.SetMPState(ActivationY, ActivationK, length, hit, velo);
+                }
                 // Use the initialization
-                clk.SetMPState(ActivationY, ActivationK, length, hit, velo);
             };
             Messages.LaserSimuStart = ModNetworking.CreateMessageType(DataType.Block);
             ModNetworking.Callbacks[Messages.LaserSimuStart] += message4 =>
             {
                 Block block = (Block)message4.GetData(0);
-                // The script on cloak block in client
-                NewLaserBlock clk = block.SimBlock.GameObject.GetComponent<NewLaserBlock>();
-                // Use the initialization
-                clk.OnSimulateStart();
+                if (block != null && block.SimBlock != null)
+                {
+                    // The script on cloak block in client
+                    NewLaserBlock clk = block.SimBlock.GameObject.GetComponent<NewLaserBlock>();
+                    // Use the initialization
+                    if (clk != null)
+                        clk.OnSimulateStart();
+                }
             };
         }
     }

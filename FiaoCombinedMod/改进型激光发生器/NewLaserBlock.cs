@@ -11,45 +11,47 @@ namespace FiaoCombinedMod
         public bool cubed = false;
         // Besiege-specific stuff
         protected MMenu LaserEditModeMenu;
-        protected MMenu LaserAbilityModeMenu;
+        public MMenu LaserAbilityModeMenu;
 
         protected MColourSlider LaserColourSlider;
 
-        protected MSlider LaserFocusSlider;
-        protected MSlider LaserLengthSlider;
-        protected MSlider LaserSafetyRange;
-        protected MSlider LaserKineticInOutSlider;
-        protected MSlider PenetrativeLengthMultiplier;
+        public MSlider LaserFocusSlider;
+        public MSlider LaserLengthSlider;
+        public MSlider LaserSafetyRange;
+        public MSlider LaserKineticInOutSlider;
+        public MSlider PenetrativeLengthMultiplier;
 
-        protected MToggle LaserOnOffToggle;
-        protected MToggle LightOptionToggle;
-        protected MKey LaserOnOffKey;
+        public MToggle LaserOnOffToggle;
+        public MToggle LightOptionToggle;
+        public MKey LaserOnOffKey;
 
-        protected MKey EffectActivateKey;
-        protected MToggle ShrinkEffectToggle;
-        protected MToggle InvertShrinking;
-        protected MSlider ChargeHoldGasp;
-        protected MMenu EffectParticleChargingPosition;
+        public MKey EffectActivateKey;
+        public MToggle ShrinkEffectToggle;
+        public MToggle InvertShrinking;
+        public MSlider ChargeHoldGasp;
+        public MMenu EffectParticleChargingPosition;
 
-        protected MToggle HoldingToEmit;
+        public MToggle HoldingToEmit;
+        public MToggle useCollider;
+        public MToggle ColliderAffectThis;
 
-        protected MToggle UseLegacy;
-        protected MToggle UseNotTrans;
+        public MToggle UseLegacy;
+        public MToggle UseNotTrans;
 
-        protected MSlider LaserWidth;
+        public MSlider LaserWidth;
 
         // Block-specific stuff
-        private bool laserAtOff;
-        private bool laserFX;
+        public bool laserAtOff;
+        public bool laserFX;
 
-        private int CountDown;
-        private int AlreadyCountDown;
+        public int CountDown;
+        public int AlreadyCountDown;
 
         public float LaserLength;
-        private Vector3 laserBlockVelo;
+        public Vector3 laserBlockVelo;
 
-        private float Multiplier;
-        private float SqrtMultiplier;
+        public float Multiplier;
+        public float SqrtMultiplier;
 
 
         public ParticleSystemRenderer PSR;
@@ -62,6 +64,7 @@ namespace FiaoCombinedMod
 
         public CustomTubeRenderer CTR;
         public GameObject CTRGO;
+        public GameObject LaserCollider;
 
         public int TheToggleProvideLight = 0;
 
@@ -125,7 +128,7 @@ namespace FiaoCombinedMod
             // Setup config window
             LaserEditModeMenu = AddMenu("laserEditMode", 0, new List<string>() { "Ability", "Misc." });
             //LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Fire", "Kinetic", "Freeze", "Explosive", "Just Visual Effect" });
-            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Igniting", "Apply Force", "Not Available, don't select", "Explode(N/A in MP)", "Visual Effects Only" });
+            LaserAbilityModeMenu = AddMenu("laserAbilityMode", 0, new List<string>() { "Igniting", "Apply Force", "Laser Saber", "Explode(N/A in MP)", "Visual Effects Only" });
 
             LaserColourSlider = AddColourSlider("Beam Colour", "laserColour", Color.red, true);
 
@@ -140,6 +143,8 @@ namespace FiaoCombinedMod
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
             LaserOnOffToggle = AddToggle("Online w/ Sim", "laserOnOffToggle", true);
             LightOptionToggle = AddToggle("Always Illuminate", "LightProbeToggle", false);
+            useCollider = AddToggle("Add collider", "Collide", false);
+            ColliderAffectThis = AddToggle("Collider's physics \nAffect this block \n All other abilities \n will be disabled", "CollidePhys", false);
             LaserOnOffKey = AddKey("Toggle", "laserOnOffKey", KeyCode.Y);
 
             LaserWidth = AddSlider("Laser Width", "laserWidth", 0.5f, 0.001f, 10f);
@@ -183,6 +188,11 @@ namespace FiaoCombinedMod
             LaserOnOffToggle.DisplayInMapper = LaserEditModeMenu.Value == 1;
             HoldingToEmit.DisplayInMapper = LaserEditModeMenu.Value == 1;
             LightOptionToggle.DisplayInMapper = LaserEditModeMenu.Value == 1;
+            useCollider.DisplayInMapper = LaserEditModeMenu.Value == 1;
+            ColliderAffectThis.DisplayInMapper = LaserEditModeMenu.Value == 1 && useCollider.IsActive;
+            ColliderAffectThis.SetValue(ColliderAffectThis.IsActive && useCollider.IsActive);
+            //ColliderAffectThis.DisplayInMapper = false;
+            //ColliderAffectThis.SetValue(true);
 
 
             LaserAbilityModeMenu.DisplayInMapper = LaserEditModeMenu.Value == 0;
@@ -198,7 +208,7 @@ namespace FiaoCombinedMod
             InvertShrinking.DisplayInMapper = LaserEditModeMenu.Value == 1 && ShrinkEffectToggle.IsActive;
 
             ChargeHoldGasp.DisplayInMapper = ((LaserAbilityModeMenu.Value == 3 ^ LaserEditModeMenu.Value == 1) && ShrinkEffectToggle.IsActive);
-            if(ChargeHoldGasp.Value == 0)
+            if (ChargeHoldGasp.Value == 0)
             {
                 ChargeHoldGasp.Value = 0.00001f;
             }
@@ -283,6 +293,16 @@ namespace FiaoCombinedMod
                 lr.SetVertexCount(0);
             }
 
+            if (useCollider.IsActive)
+            {
+                LaserCollider = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                LaserCollider.transform.position = this.transform.TransformPoint(Vector3.forward * 1.3f + Vector3.forward * this.LaserLength / 2);
+                LaserCollider.transform.localScale = new Vector3(LaserWidth.Value, LaserWidth.Value, LaserLengthSlider.Value / 2);
+                LaserColliderBehavior lcc = LaserCollider.AddComponent<LaserColliderBehavior>();
+                lcc.myParent = this;
+                DestroyImmediate(LaserCollider.GetComponent<Renderer>());
+            }
+
             Especially.transform.SetParent(this.transform);
             Especially.transform.localPosition = Vector3.forward * 1.1f;
             Especially.transform.LookAt(this.transform.position);
@@ -362,7 +382,7 @@ namespace FiaoCombinedMod
         public void SetMPState(bool Ay, bool Ak, float laserLength, bool hitSomething, Vector3 velo)
         {
             laserAtOff = Ay;
-            laserFX = Ak; 
+            laserFX = Ak;
             LaserLength = laserLength;
             BeamHitAnything = hitSomething;
             laserBlockVelo = velo;
@@ -412,7 +432,7 @@ namespace FiaoCombinedMod
             }
 
         }
-        protected void Ignite(RHInfo rH)
+        public void Ignite(Transform rH)
         {
             FireTag FT = rH.transform.GetComponentInChildren<FireTag>();
             if (FT) // ignite
@@ -434,9 +454,8 @@ namespace FiaoCombinedMod
             else if (rH.transform.GetComponent<CastleWallBreak>()) // explode ipsilon stuff
                 rH.transform.GetComponent<CastleWallBreak>().BreakExplosion(400f, rH.point, 10f, 0f); */
         }
-        private void doPassiveAbility()
+        public void doPassiveAbility()
         {
-            applyCubeShader();
             if (!BeamHitAnything) return;
             if (ShrinkEffectToggle.IsActive && (CountDown < ChargeHoldGasp.Value * 100)) return;
             foreach (RHInfo rHinfo in rHInfos)
@@ -467,7 +486,7 @@ namespace FiaoCombinedMod
                 switch (LaserAbilityModeMenu.Value)
                 {
                     case 0: // fire
-                        Ignite(rH);
+                        Ignite(rH.transform);
                         break;
                     case 1: // kinetic
                         if (rH.rigidBody != null)
@@ -494,12 +513,22 @@ namespace FiaoCombinedMod
                         }
                         ReduceBreakForce(rH.Joint);
                         break;
-                    case 2: // freeze
-                        return;
-                        IceTag IT = rH.transform.GetComponent<IceTag>();
+                    case 2: // Slicing
+                        ConfigurableJoint IT = rH.transform.GetComponent<ConfigurableJoint>();
                         if (IT)
                         {
-                            IT.Freeze();
+                            IT.breakForce = 0;
+                            IT.breakTorque = 0;
+                        }
+                        BlockBehaviour blockBehaviour = rH.transform.GetComponent<BlockBehaviour>();
+                        if (blockBehaviour)
+                        {
+                            List<Joint> ITt = blockBehaviour.jointsToMe;
+                            foreach (Joint jt in ITt)
+                            {
+                                jt.breakForce = 0;
+                                jt.breakTorque = 0;
+                            }
                         }
                         break;
                     case 3: // bomb
@@ -529,30 +558,6 @@ namespace FiaoCombinedMod
             CountDown = 0;
         }
 
-        private void applyCubeShader()
-        {
-            if(cubed == true) { return;  }
-            ModAssetBundle mab = ModResource.GetAssetBundle("CubedShader");
-            Material aaa = null;
-            foreach (string name in mab.AssetBundle.GetAllAssetNames())
-            {
-                aaa = mab.LoadAsset<Material>(name);
-                if(aaa != null) { break; }
-            }
-
-            cubed = true;
-            foreach (BlockBehaviour bb in FindObjectsOfType<BlockBehaviour>())
-            {
-                if(Vector3.SqrMagnitude(bb.transform.position - this.transform.position) < 10)
-                {
-                    BesiegeConsoleController.ShowMessage(bb.gameObject.name);
-                    foreach(Renderer red in bb.gameObject.GetComponentsInChildren<Renderer>())
-                    {
-                        red.material.shader = aaa.shader;
-                    }
-                }
-            }
-        }
 
         public void ReduceBreakForce(ConfigurableJoint Jointo)
         {
@@ -646,9 +651,10 @@ namespace FiaoCombinedMod
         {
             Vector3 lastPoint = point;
             Vector3 lastDir = dir;
+            LaserLength = LaserLengthSlider.Value;
+            if (useCollider.IsActive) return;
             if (StatMaster.isClient) return;
             rHInfos.Clear();
-            LaserLength = LaserLengthSlider.Value;
 
             BeamHitAnything = false;
 
@@ -677,7 +683,7 @@ namespace FiaoCombinedMod
         private void LegacyDrawBeam()
         {
             lr.SetVertexCount(2);
-            lr.SetPositions(new Vector3[] { this.transform.position + this.transform.forward * 0.8f, this.transform.position + this.transform.forward * LaserLength });
+            lr.SetPositions(new Vector3[] { this.transform.position + this.transform.forward * 0.8f * this.transform.localScale.z, this.transform.position + this.transform.forward * LaserLength });
         }
         private void LegacySetBeamWidth()
         {
@@ -687,11 +693,88 @@ namespace FiaoCombinedMod
         }
 
 
-        Vector3 EulerToDirection(float Elevation, float Heading)
+        public Vector3 EulerToDirection(float Elevation, float Heading)
         {
             float elevation = Elevation * Mathf.Deg2Rad;
             float heading = Heading * Mathf.Deg2Rad;
             return new Vector3(Mathf.Cos(elevation) * Mathf.Sin(heading), Mathf.Sin(elevation), Mathf.Cos(elevation) * Mathf.Cos(heading));
+        }
+    }
+
+    public class LaserColliderBehavior : MonoBehaviour
+    {
+        public NewLaserBlock myParent;
+        public List<NewLaserBlock.RHInfo> rHInfos = new List<NewLaserBlock.RHInfo>();
+
+        void Update()
+        {
+            myParent.doPassiveAbility();
+            rHInfos.Clear();
+            if (!myParent)
+            {
+                DestroyImmediate(this.gameObject);
+                return;
+            }
+            if (myParent.ColliderAffectThis.IsActive)
+            {
+                this.transform.parent = myParent.transform;
+            }
+            else
+            {
+                this.transform.parent = null;
+            }
+            myParent.rHInfos = this.rHInfos;
+            
+            if (myParent.laserAtOff)
+            {
+                this.transform.position = new Vector3(114, 514, 810) * 1919;
+                this.transform.localScale = Vector3.zero;
+            }
+            else /*if (!myParent.ColliderAffectThis.IsActive)*/
+            {
+                this.transform.position = myParent.transform.TransformPoint(Vector3.forward * 1.3f + Vector3.forward * myParent.LaserLength / 2);
+                this.transform.localScale = new Vector3(myParent.LaserWidth.Value, myParent.LaserWidth.Value, myParent.LaserLengthSlider.Value);
+                this.transform.rotation = myParent.transform.rotation;
+            }
+        }
+        void FixedUpdate()
+        {
+            Update();
+        }
+
+        public void OnCollisionEnter(Collision rH) 
+        {
+            if (StatMaster.isClient) return;
+            myParent.LaserLength = myParent.LaserLengthSlider.Value;
+
+            myParent.BeamHitAnything = false;
+
+
+            if (!rH.collider.isTrigger && rH.contacts.Length > 0)
+            {
+                foreach (ContactPoint cp in rH.contacts)
+                {
+                    rHInfos.Add(new NewLaserBlock.RHInfo(cp.point, rH.transform, rH.collider, rH.rigidbody, rH.transform.GetComponent<ConfigurableJoint>()));
+                    myParent.BeamHitAnything = true;
+                    {
+
+                        float SqrDist = (this.transform.position - cp.point).sqrMagnitude;
+                        if (SqrDist >= Mathf.Pow(myParent.LaserLength * myParent.PenetrativeLengthMultiplier.Value, 2))
+                        {
+                            myParent.LaserLength = Mathf.Sqrt(SqrDist);
+                        }
+                        else
+                        {
+                            myParent.LaserLength *= myParent.PenetrativeLengthMultiplier.Value;
+                        }
+                    }
+                }
+            }
+
+        }
+        public void OnCollisionStay(Collision rH)
+        {
+            OnCollisionEnter(rH);
         }
     }
 }
