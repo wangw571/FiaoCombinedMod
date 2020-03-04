@@ -741,11 +741,11 @@ namespace FiaoCombinedMod
                                     1f,          //最小值
                                     100f);           //最大值
 
-            MissileGuidanceMode = AddMenu("MissileMode", 0, new List<string> { "With Lead", "Without Lead", "From Top", "From Certain height" });
+            MissileGuidanceMode = AddMenu("MissileMode", 0, new List<string> { "With Leading", "Without Leading", "Strike Top", "Cruise at altitude" });
 
             MissileGuidanceModeSwitchButton = AddKey("Switch Guide Mode", "GuideModeSwitch", KeyCode.RightControl);
 
-            MissileHeightController = AddSlider("Height above target", "Height", 100, 0, 1500);
+            MissileHeightController = AddSlider("Designated Height above target", "Height", 100, 0, 1500);
 
             MissileTorqueSlider = AddSlider("Torque Multiplier", "Torque", 4, 0.1f, 10f);
 
@@ -1235,7 +1235,7 @@ namespace FiaoCombinedMod
 
                 }
 
-                if (相机抖动.IsDown)
+                if (相机抖动.IsHeld)
                 {
                     Vector3 Adderz = new Vector3();
                     { Adderz = currentTarget.transform.position - this.transform.position; Adderz = new Vector3(Mathf.Sqrt(Math.Abs(Adderz.x)), Mathf.Sqrt(Math.Abs(Adderz.y)), Mathf.Sqrt(Math.Abs(Adderz.z))); }

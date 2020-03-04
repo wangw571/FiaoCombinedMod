@@ -34,6 +34,7 @@ namespace FiaoCombinedMod
         public MToggle HoldingToEmit;
         public MToggle useCollider;
         public MToggle ColliderAffectThis;
+        public MToggle ShowCollider;
 
         public MToggle UseLegacy;
         public MToggle UseNotTrans;
@@ -63,6 +64,7 @@ namespace FiaoCombinedMod
         private string EffectKeyText2;
 
         public CustomTubeRenderer CTR;
+        public LaserColliderBehavior LCB;
         public GameObject CTRGO;
         public GameObject LaserCollider;
 
@@ -132,19 +134,20 @@ namespace FiaoCombinedMod
 
             LaserColourSlider = AddColourSlider("Beam Colour", "laserColour", Color.red, true);
 
-            LaserFocusSlider = AddSlider("Laser Focus", "laserFocus", 1f, 0.08f, 0.5f);
+            LaserFocusSlider = AddSlider("Laser Focus Ratio", "laserFocus", 1f, 0.08f, 1f);
             LaserLengthSlider = AddSlider("Laser Length", "laserLength", 200f, 0.1f, 1500);
             LaserSafetyRange = AddSlider("Safety Length", "laserSafeLength", 1f, 0.1f, 1500);
 
             //LaserKineticUpDownSlider = AddSlider("Up/Down Force", "laserKinUpDown", 1f, -2.5f, 2.5f);
-            LaserKineticInOutSlider = AddSlider("Force", "laserKinInOut", 0f, -2.5f, 2.5f);
+            LaserKineticInOutSlider = AddSlider("Force", "laserKinInOut", 1f, -2.5f, 2.5f);
             //LaserKineticSideSlider = AddSlider("Sideways Force", "laserKinSide", 0f, -2.5f, 2.5f);
 
             //LaserFastUpdateToggle = AddToggle("Fast Raycasting", "laserFastUpdate", false);
             LaserOnOffToggle = AddToggle("Online w/ Sim", "laserOnOffToggle", true);
             LightOptionToggle = AddToggle("Always Illuminate", "LightProbeToggle", false);
             useCollider = AddToggle("Add collider", "Collide", false);
-            ColliderAffectThis = AddToggle("Collider's physics \nAffect this block \n All other abilities \n will be disabled", "CollidePhys", false);
+            ColliderAffectThis = AddToggle("Collider's physics \nAffect this block.", "CollidePhys", true);
+            ShowCollider = AddToggle("Show Collider", "ShowCollider", false);
             LaserOnOffKey = AddKey("Toggle", "laserOnOffKey", KeyCode.Y);
 
             LaserWidth = AddSlider("Laser Width", "laserWidth", 0.5f, 0.001f, 10f);
@@ -157,7 +160,7 @@ namespace FiaoCombinedMod
             EffectKeyText2 = "Deploy Bomb";
 
 
-            ShrinkEffectToggle = AddToggle("Use Charging Effect", "UseShrink", true);
+            ShrinkEffectToggle = AddToggle("Charging", "UseShrink", true);
             InvertShrinking = AddToggle("Inversed Charge Visual", "InverseShrink", false);
             ChargeHoldGasp = AddSlider("Charge Duration", "CountDown", 2.3f, 0, 10f);
 
@@ -166,7 +169,7 @@ namespace FiaoCombinedMod
             HoldingToEmit = AddToggle("Only emit laser when holding", "HoldOnly", false);
 
             UseLegacy = AddToggle("Use Legacy Rending", "Legacy", true);
-            UseNotTrans = AddToggle("Nontransparent", "NonTran", false);
+            UseNotTrans = AddToggle("Non-transparent", "NonTran", false);
 
             // register mode switching functions with menu delegates
             LaserAbilityModeMenu.ValueChanged += CycleAbilityMode;
@@ -190,14 +193,15 @@ namespace FiaoCombinedMod
             LightOptionToggle.DisplayInMapper = LaserEditModeMenu.Value == 1;
             useCollider.DisplayInMapper = LaserEditModeMenu.Value == 1;
             ColliderAffectThis.DisplayInMapper = LaserEditModeMenu.Value == 1 && useCollider.IsActive;
-            ColliderAffectThis.SetValue(ColliderAffectThis.IsActive && useCollider.IsActive);
+            ShowCollider.DisplayInMapper = LaserEditModeMenu.Value == 1 && useCollider.IsActive;
+            //ColliderAffectThis.SetValue();
             //ColliderAffectThis.DisplayInMapper = false;
             //ColliderAffectThis.SetValue(true);
 
 
             LaserAbilityModeMenu.DisplayInMapper = LaserEditModeMenu.Value == 0;
 
-            LaserKineticInOutSlider.DisplayInMapper = LaserEditModeMenu.Value == 0 && LaserAbilityModeMenu.Value == 1;
+            LaserKineticInOutSlider.DisplayInMapper = LaserEditModeMenu.Value == 0 && (LaserAbilityModeMenu.Value == 1 || LaserAbilityModeMenu.Value == 2);
 
             ShrinkEffectToggle.DisplayInMapper = LaserEditModeMenu.Value == 1;
             EffectActivateKey.DisplayInMapper = /*(LaserAbilityModeMenu.Value == 3 ? LaserEditModeMenu.Value == 0 : */ShrinkEffectToggle.IsActive/*)*/;
@@ -240,7 +244,7 @@ namespace FiaoCombinedMod
             //if (value == 1)
             //{
             //LaserKineticUpDownSlider.DisplayInMapper = true;
-            LaserKineticInOutSlider.DisplayInMapper = value == 1;
+            LaserKineticInOutSlider.DisplayInMapper = (value == 1 || value == 2);
             //LaserKineticSideSlider.DisplayInMapper = true;
             //}
             /*else if (value == 4)*/
@@ -250,7 +254,10 @@ namespace FiaoCombinedMod
 
         public override void OnSimulateStart()
         {
+            //string ShaderString = UseNotTrans.IsActive ? "Legacy Shaders/Reflective/Bumped Specular" : "Particles/Additive";
             string ShaderString = UseNotTrans.IsActive ? "Legacy Shaders/Reflective/Bumped Specular" : "Particles/Additive";
+
+            string ChargeParticleString = "Particles/Additive";
 
             rHInfos = new List<RHInfo>();
 
@@ -288,19 +295,22 @@ namespace FiaoCombinedMod
 
                 Color ArgColour = LaserColourSlider.Value;
 
-                lr.SetColors(Color.Lerp(ArgColour, Color.black, 0.45f),
-                    Color.Lerp(ArgColour, Color.clear, 0.2f));
+                lr.SetColors(Color.Lerp(ArgColour, Color.black, 0.45f), Color.Lerp(ArgColour, Color.clear, 0.2f));
+                lr.material.color = (ArgColour);
                 lr.SetVertexCount(0);
             }
 
             if (useCollider.IsActive)
             {
                 LaserCollider = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                LaserCollider.transform.position = this.transform.TransformPoint(Vector3.forward * 1.3f + Vector3.forward * this.LaserLength / 2);
+                LaserCollider.transform.position = this.transform.TransformPoint((Vector3.forward * (1.3f + this.LaserSafetyRange.Value) + Vector3.forward * this.LaserLength / 2));
                 LaserCollider.transform.localScale = new Vector3(LaserWidth.Value, LaserWidth.Value, LaserLengthSlider.Value / 2);
-                LaserColliderBehavior lcc = LaserCollider.AddComponent<LaserColliderBehavior>();
-                lcc.myParent = this;
-                DestroyImmediate(LaserCollider.GetComponent<Renderer>());
+                LCB = LaserCollider.AddComponent<LaserColliderBehavior>();
+                LCB.myParent = this;
+                if (!ShowCollider.IsActive)
+                {
+                    DestroyImmediate(LaserCollider.GetComponent<Renderer>());
+                }
             }
 
             Especially.transform.SetParent(this.transform);
@@ -341,7 +351,7 @@ namespace FiaoCombinedMod
 
                 PSR = Especially.GetComponent<ParticleSystemRenderer>();
                 //PSR.material = new Material(Shader.Find("Particles/Alpha Blended"));
-                PSR.material = new Material(Shader.Find(ShaderString));
+                PSR.material = new Material(Shader.Find(ChargeParticleString));
                 PSR.material.mainTexture = (ModResource.GetTexture("LaserParticle.png"));
             }
             if (StatMaster.isMP && !StatMaster.isClient)
@@ -360,6 +370,13 @@ namespace FiaoCombinedMod
                     laserAtOff = HoldingToEmit.IsActive ? true : !laserAtOff;
                 }
                 laserFX = EffectActivateKey.IsHeld;
+
+                ConfigurableJoint configurableJoint = this.GetComponent<ConfigurableJoint>();
+                if (useCollider.IsActive && configurableJoint)
+                {
+                    configurableJoint.breakForce = Mathf.Infinity;
+                    configurableJoint.breakTorque = Mathf.Infinity;
+                }
             }
             UpdateThingy();
             if (StatMaster.isMP && !StatMaster.isClient)
@@ -530,6 +547,10 @@ namespace FiaoCombinedMod
                                 jt.breakTorque = 0;
                             }
                         }
+                        if (rH.rigidBody != null)
+                        {
+                            rH.rigidBody.AddForce(this.transform.forward * this.LaserKineticInOutSlider.Value * 19.19f);
+                        }
                         break;
                     case 3: // bomb
                         if (ShrinkEffectToggle.IsActive)
@@ -555,7 +576,7 @@ namespace FiaoCombinedMod
             }
 
             if (ShrinkEffectToggle.IsActive && (CountDown < ChargeHoldGasp.Value * 100 || !laserFX)) return;
-            CountDown = 0;
+            if(rHInfos.Count != 0) CountDown = 0;
         }
 
 
@@ -660,7 +681,7 @@ namespace FiaoCombinedMod
 
             foreach (RaycastHit Hito in Physics.RaycastAll(lastPoint, lastDir, LaserLength))
             {
-                if (!Hito.collider.isTrigger)
+                if (!Hito.collider.isTrigger && (Hito.transform.GetComponent< LaserColliderBehavior>() == null))
                 {
                     rHInfos.Add(new RHInfo(Hito.point, Hito.transform, Hito.collider, Hito.rigidbody, Hito.transform.GetComponent<ConfigurableJoint>()));
                     BeamHitAnything = true;
@@ -699,13 +720,42 @@ namespace FiaoCombinedMod
             float heading = Heading * Mathf.Deg2Rad;
             return new Vector3(Mathf.Cos(elevation) * Mathf.Sin(heading), Mathf.Sin(elevation), Mathf.Cos(elevation) * Mathf.Cos(heading));
         }
+
+        public void OnCollisionEnter(Collision rH)
+        {
+            if(useCollider.IsActive && ColliderAffectThis.IsActive)
+            {
+                ConfigurableJoint cJ = this.GetComponent<ConfigurableJoint>();
+                if (cJ)
+                {
+                    if(rH.rigidbody == cJ.connectedBody)
+                    {
+                        return;
+                    }
+                }
+                LCB.OnCollisionEnter(rH);
+            }
+        }
+
+        public void OnCollisionStay(Collision rH)
+        {
+            OnCollisionEnter(rH);
+        }
     }
 
     public class LaserColliderBehavior : MonoBehaviour
     {
         public NewLaserBlock myParent;
         public List<NewLaserBlock.RHInfo> rHInfos = new List<NewLaserBlock.RHInfo>();
-
+        GameObject anotherBox;
+        void Start()
+        {
+            anotherBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            anotherBox.transform.parent = this.transform;
+            anotherBox.transform.localPosition = Vector3.zero;
+            anotherBox.transform.localEulerAngles = Vector3.forward * 45;
+            BoxCollider box2 = anotherBox.GetComponent<BoxCollider>();
+        }
         void Update()
         {
             myParent.doPassiveAbility();
@@ -718,22 +768,34 @@ namespace FiaoCombinedMod
             if (myParent.ColliderAffectThis.IsActive)
             {
                 this.transform.parent = myParent.transform;
-            }
+            } 
             else
             {
                 this.transform.parent = null;
             }
             myParent.rHInfos = this.rHInfos;
-            
+             
             if (myParent.laserAtOff)
             {
-                this.transform.position = new Vector3(114, 514, 810) * 1919;
                 this.transform.localScale = Vector3.zero;
+                this.transform.position = new Vector3(114, 514, 810) * 1919;
             }
             else /*if (!myParent.ColliderAffectThis.IsActive)*/
             {
-                this.transform.position = myParent.transform.TransformPoint(Vector3.forward * 1.3f + Vector3.forward * myParent.LaserLength / 2);
-                this.transform.localScale = new Vector3(myParent.LaserWidth.Value, myParent.LaserWidth.Value, myParent.LaserLengthSlider.Value);
+                if (myParent.ColliderAffectThis.IsActive) {
+                    this.transform.localPosition = (Vector3.forward * (1.3f + myParent.LaserSafetyRange.Value) + Vector3.forward * myParent.LaserLength / 2);
+                }
+                else
+                {
+                    this.transform.position = myParent.transform.TransformPoint((Vector3.forward * (1.3f + myParent.LaserSafetyRange.Value) + Vector3.forward * myParent.LaserLength / 2) / myParent.transform.localScale.z);
+                    anotherBox.transform.position = myParent.transform.TransformPoint((Vector3.forward * (1.3f + myParent.LaserSafetyRange.Value) + Vector3.forward * myParent.LaserLength / 2) / myParent.transform.localScale.z);
+                }
+                float HoldGaspValue = (myParent.ChargeHoldGasp.Value * 100);
+                this.transform.localScale = new Vector3(
+                    myParent.LaserWidth.Value * (!myParent.InvertShrinking.IsActive ? 1 - (myParent.CountDown / HoldGaspValue) : (myParent.CountDown / HoldGaspValue)),
+                    myParent.LaserWidth.Value * (!myParent.InvertShrinking.IsActive ? 1 - (myParent.CountDown / HoldGaspValue) : (myParent.CountDown / HoldGaspValue)),
+                    myParent.LaserLengthSlider.Value);
+                anotherBox.transform.localScale = this.transform.localScale;
                 this.transform.rotation = myParent.transform.rotation;
             }
         }
@@ -756,18 +818,18 @@ namespace FiaoCombinedMod
                 {
                     rHInfos.Add(new NewLaserBlock.RHInfo(cp.point, rH.transform, rH.collider, rH.rigidbody, rH.transform.GetComponent<ConfigurableJoint>()));
                     myParent.BeamHitAnything = true;
-                    {
+                    //{
 
-                        float SqrDist = (this.transform.position - cp.point).sqrMagnitude;
-                        if (SqrDist >= Mathf.Pow(myParent.LaserLength * myParent.PenetrativeLengthMultiplier.Value, 2))
-                        {
-                            myParent.LaserLength = Mathf.Sqrt(SqrDist);
-                        }
-                        else
-                        {
-                            myParent.LaserLength *= myParent.PenetrativeLengthMultiplier.Value;
-                        }
-                    }
+                    //    float SqrDist = (this.transform.position - cp.point).sqrMagnitude;
+                    //    if (SqrDist >= Mathf.Pow(myParent.LaserLength * myParent.PenetrativeLengthMultiplier.Value, 2))
+                    //    {
+                    //        myParent.LaserLength = Mathf.Sqrt(SqrDist);
+                    //    }
+                    //    else
+                    //    {
+                    //        myParent.LaserLength *= myParent.PenetrativeLengthMultiplier.Value;
+                    //    }
+                    //}
                 }
             }
 

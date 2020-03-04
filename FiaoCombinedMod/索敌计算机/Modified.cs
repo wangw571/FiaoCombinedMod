@@ -13,24 +13,24 @@ namespace FiaoCombinedMod
     {
         public bool UseChinese = true;
 
-        protected MKey Key1;
-        protected MKey Key2;
-        protected MKey Key25;
-        protected MSlider 炮力;
-        protected MSlider 精度;
-        protected MSlider 计算间隔;
-        protected MSlider 警戒度;
-        protected MSlider 镜头哪里;
-        protected MToggle 自动索敌;
-        protected MSlider 自动索敌友方范围;
-        protected MToggle FireOnMouseClick;
-        protected MMenu 模式;
-        protected MToggle 不聪明模式;
-        protected MToggle DisableHTracking;
-        protected MToggle DisableVTracking;
-        protected MSlider KnockBackStablizierAdjuster;
-        protected MToggle LockConnectionWhenNoTarget;
-        protected MSlider TorqueMultiplier;
+        public MKey Key1;
+        public MKey Key2;
+        public MKey Key25;
+        public MSlider 炮力;
+        public MSlider 精度;
+        public MSlider 计算间隔;
+        public MSlider 警戒度;
+        public MSlider 镜头哪里;
+        public MToggle 自动索敌;
+        public MSlider 自动索敌友方范围;
+        public MToggle FireOnMouseClick;
+        public MMenu 模式;
+        public MToggle 不聪明模式;
+        public MToggle DisableHTracking;
+        public MToggle DisableVTracking;
+        public MSlider KnockBackStablizierAdjuster;
+        public MToggle LockConnectionWhenNoTarget;
+        public MSlider TorqueMultiplier;
 
         private List<Guid> FriendlyBlockGUID;
 

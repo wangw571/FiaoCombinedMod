@@ -54,6 +54,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="结构增强器\Structure Reinforcer.cs" />
     <None Include="FiaoCombinedMod" />
     <Compile Include="FiaoCombinedMod.cs" />
     <Compile Include="Pilot Panel\PanelBlock.cs" />
@@ -69,9 +70,7 @@
     <Compile Include="索敌计算机\Modified.cs" />
     <Compile Include="索敌计算机\TargetPainter.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="结构增强器\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetPath)" "%25BESIEGE_LOCATION%25Besiege_Data\Mods\FiaoCombinedMod\FiaoCombinedMod\$(TargetName).dll"</PostBuildEvent>
